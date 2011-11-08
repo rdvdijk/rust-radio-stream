@@ -1,0 +1,12 @@
+= Rust Radio Ruby Runner =
+
+This is a piece of concept Ruby replacement of the current ices0 with
+Perl module version of Rust Radio.
+
+== TODO ==
+
+- playing multiple files
+- read playlist from database
+- proper run loop
+- reconnection attempts
+

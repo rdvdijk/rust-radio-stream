@@ -1,0 +1,21 @@
+GIT
+  remote: git@github.com:rdvdijk/icanhasaudio.git
+  revision: f945aa3cd0e28f99588c634536a050c7939744f9
+  specs:
+    icanhasaudio (0.1.3)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    flacinfo-rb (0.4)
+    ruby-audio (1.5.0)
+    ruby-shout (2.2.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  flacinfo-rb
+  icanhasaudio (= 0.1.3)!
+  ruby-audio
+  ruby-shout

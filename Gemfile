@@ -4,3 +4,6 @@ gem "ruby-audio"
 gem "icanhasaudio", "0.1.3", :git => "git@github.com:rdvdijk/icanhasaudio.git"
 gem "flacinfo-rb"
 
+gem "data_mapper"
+gem "dm-postgres-adapter"
+

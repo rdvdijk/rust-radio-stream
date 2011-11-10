@@ -14,9 +14,8 @@ module RustRadio
     def play
       begin
         @playlist.play do |song_path|
-            puts "playing: #{song_path}"
-            #stream(song_path)
-            sleep 0.1
+          puts "playing: #{song_path}"
+          stream(song_path)
         end
       rescue Interrupt => e
         @writer.close

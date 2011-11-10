@@ -10,3 +10,10 @@ Perl module version of Rust Radio.
 - proper run loop
 - reconnection attempts
 
+== REQUIREMENTS ==
+
+- liblame-dev
+- libsndfile-dev
+- libshout-dev
+- libflac-dev
+

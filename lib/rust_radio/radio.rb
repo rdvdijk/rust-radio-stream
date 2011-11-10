@@ -17,15 +17,14 @@ module RustRadio
         puts "playing: #{song_path}"
         stream(song_path)
       end
+
+      # when catching error or ctrl-c
+      # TODO @writer.close
     end
 
     # Stream a FLAC file
     def stream(file)
-      begin
-        @transcoder.transcode(file)
-      ensure
-        @writer.close
-      end
+      @transcoder.transcode(file)
     end
 
   end

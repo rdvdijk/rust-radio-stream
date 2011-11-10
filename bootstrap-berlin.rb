@@ -5,6 +5,10 @@ require 'flacinfo'
 
 include RustRadio
 
+config = YAML.load_file("config.yml")["config"]
+
+bootstrap = config["bootstrap"]
+
 # remove all
 [ Playlist::Entry, Playlist, Song, Show ].each do |model|
   models = model.all
@@ -12,9 +16,8 @@ include RustRadio
   models.map(&:destroy)
 end
 
-
 # Read all FLAC files and find info file:
-folder_path = "/Users/roel/code/personal/shows/ny2001-06-26.csb.flac16"
+folder_path = bootstrap["folder_path"]
 
 flac_files = []
 info_file = nil

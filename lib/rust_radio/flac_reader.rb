@@ -28,7 +28,7 @@ module RustRadio
   end
 end
 
-# monkey patch
+# monkey patch, is fixed in unreleased version of ruby-audio
 class RubyAudio::Buffer
   def real_each
     self.real_size.times do |i|

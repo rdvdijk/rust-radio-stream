@@ -12,4 +12,6 @@ module RustRadio
   require 'rust_radio/model/show'
   require 'rust_radio/model/playlist'
 
+  require 'rust_radio/show_adder'
+
 end

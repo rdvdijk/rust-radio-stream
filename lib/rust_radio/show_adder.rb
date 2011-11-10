@@ -2,15 +2,6 @@ require 'flacinfo'
 
 module RustRadio
   class ShowAdder
-
-    def remove_all
-      [ Playlist::Entry, Playlist, Song, Show ].each do |model|
-        models = model.all
-        puts "Destroying #{models.size} x #{model}"
-        models.map(&:destroy)
-      end
-    end
-
     def add(folder_path)
       collect_files(folder_path)
       show = create_show(folder_path)
@@ -51,7 +42,8 @@ module RustRadio
                   date: Date.parse(date),
                   title: city_state,
                   info_file: content,
-                  setlist_url: "") # TODO
+                  setlist_identifier: "") #{date.gsub(/[^\d]/,'')}0")
+      puts "Adding show: #{show.date}  |   #{show.artist}  |   #{show.title}"
       show.save
       show
     end
@@ -70,15 +62,20 @@ module RustRadio
                   sort_order: index+1,
                   show: show)
         song.save
+        putc "."
       end
     end
 
     def add_to_playlist(show)
-      playlist = Playlist.new(name: "Default")
-      playlist.save
+      playlist = Playlist.first_or_create(name: "Default")
 
-      playlist.entries.create(show:show)
+      max = playlist.entries.max(:sort_order)
+      max = 0 if max.nil?
+
+      playlist.entries.create(show:show, sort_order:max+1)
+
+      puts
+      puts "Added to playlist '#{playlist.name}'."
     end
-
   end
 end

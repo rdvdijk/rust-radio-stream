@@ -2,7 +2,6 @@ require 'flacinfo'
 
 module RustRadio
   class ShoutcastWriter
-
     def initialize(config)
       # Shout streamer
       @streamer = RustRadio::Streamer.new(config)
@@ -53,6 +52,5 @@ module RustRadio
       metadata.add "song", "#{title} - (#{album})"
       @streamer.metadata = metadata
     end
-
   end
 end

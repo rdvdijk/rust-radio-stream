@@ -2,7 +2,6 @@ require 'shout'
 
 module RustRadio
   class Streamer
-
     def initialize(config)
       s             = Shout.new
       s.host        = config["hostname"]
@@ -18,10 +17,12 @@ module RustRadio
     end
 
     def connect
+      puts "[#{@shout.name}] Connecting to #{@shout.host}:#{@shout.port}.."
       @shout.connect
     end
 
     def disconnect
+      puts "[#{@shout.name}] Disconnecting form #{@shout.host}:#{@shout.port}.."
       @shout.disconnect
     end
 
@@ -36,6 +37,5 @@ module RustRadio
     def metadata=(metadata)
       @shout.metadata = metadata
     end
-
   end
 end

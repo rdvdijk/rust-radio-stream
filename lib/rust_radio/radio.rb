@@ -1,6 +1,5 @@
 module RustRadio
   class Radio
-
     def initialize
       config = YAML.load_file("config.yml")["config"]
 
@@ -13,20 +12,21 @@ module RustRadio
     end
 
     def play
-      while song_path = @playlist.next_song
-        puts "playing: #{song_path}"
-        stream(song_path)
+      begin
+        @playlist.play do |song_path|
+            puts "playing: #{song_path}"
+            #stream(song_path)
+            sleep 0.1
+        end
+      rescue Interrupt => e
+        @writer.close
       end
-
-      # when catching error or ctrl-c
-      # TODO @writer.close
     end
 
     # Stream a FLAC file
     def stream(file)
       @transcoder.transcode(file)
     end
-
   end
 end
 

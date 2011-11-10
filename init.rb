@@ -17,6 +17,8 @@ database = database["database"]
 
 uri = "postgres://#{[username,password].compact.join(':')}@#{host}/#{database}"
 DataMapper.setup(:default, uri)
+DataMapper.finalize
 
-DataMapper.auto_upgrade!
+#DataMapper.auto_upgrade!
+#DataMapper.auto_migrate!
 

@@ -2,7 +2,6 @@ require 'icanhasaudio'
 
 module RustRadio
   class Encoder
-
     def initialize(config)
       writer = Audio::MPEG::Encoder.new
       writer.vbr_type = Audio::MPEG::Encoder::VBR_OFF
@@ -18,6 +17,5 @@ module RustRadio
     def flush(&block)
       @encoder.flush_io(&block)
     end
-
   end
 end

@@ -1,0 +1,17 @@
+config:
+  hostname: stream.example.com
+  port: 8000
+  password: changeme
+  bitrate: 128
+  description: Rock music, all week long!
+  genre: Rock
+  name: Rock Radio
+  url: http://www.example.com
+  playlist: Default
+
+  database:
+    username: radio
+    password: changeme
+    host: localhost
+    database: radio
+

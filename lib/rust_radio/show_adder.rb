@@ -68,11 +68,7 @@ module RustRadio
 
     def add_to_playlist(show)
       playlist = Playlist.first_or_create(name: "Default")
-
-      max = playlist.entries.max(:sort_order)
-      max = 0 if max.nil?
-
-      playlist.entries.create(show:show, sort_order:max+1)
+      playlist.entries.create(show:show)
 
       puts
       puts "Added to playlist '#{playlist.name}'."

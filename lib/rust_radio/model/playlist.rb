@@ -12,9 +12,10 @@ class RustRadio::Playlist
     property :id,           Serial
     property :current_song, Integer, default: 0, required: true
 
-    property :sort_order,   Integer, required: true, unique: true
     property :created_at, DateTime
     property :updated_at, DateTime
+
+    is :list, :scope => :playlist_id
 
     # return the next song for this entry
     def current_song_path
@@ -28,7 +29,7 @@ class RustRadio::Playlist
     end
   end
 
-  has n, :entries, order: [ :sort_order.asc ]
+  has n, :entries, order: [ :position.asc ]
   has n, :shows, through: :entries
 
   property :id,   Serial
@@ -44,11 +45,10 @@ class RustRadio::Playlist
       entry.next
 
       if entry.current_song == 0
-        entry.sort_order = entries.max(:sort_order) + 1
-        entry.save
+        entry.move(:bottom)
         reload
-        # update all sort_order values -= 1 ..
       end
     end
   end
+
 end

@@ -21,6 +21,8 @@ GEM
       dm-validations (~> 1.2.0)
     data_objects (0.10.7)
       addressable (~> 2.1)
+    dm-adjust (1.2.0)
+      dm-core (~> 1.2.0)
     dm-aggregates (1.2.0)
       dm-core (~> 1.2.0)
     dm-constraints (1.2.0)
@@ -30,6 +32,8 @@ GEM
     dm-do-adapter (1.2.0)
       data_objects (~> 0.10.6)
       dm-core (~> 1.2.0)
+    dm-is-list (1.2.0)
+      dm-adjust (~> 1.2.0)
     dm-migrations (1.2.0)
       dm-core (~> 1.2.0)
     dm-postgres-adapter (1.2.0)
@@ -72,6 +76,7 @@ PLATFORMS
 
 DEPENDENCIES
   data_mapper
+  dm-is-list
   dm-postgres-adapter
   flacinfo-rb
   icanhasaudio (= 0.1.3)!

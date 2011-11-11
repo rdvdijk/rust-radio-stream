@@ -14,4 +14,6 @@ module RustRadio
 
   require 'rust_radio/show_adder'
 
+  require 'rust_radio/cli/cli'
+
 end

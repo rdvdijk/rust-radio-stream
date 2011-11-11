@@ -1,14 +1,15 @@
 module RustRadio
   class Radio
-    def initialize
-      config = YAML.load_file("config.yml")["config"]
+    def initialize(config_file)
+      config = YAML.load_file(config_file)["config"]
 
       @reader = FlacReader.new
       @writer = ShoutcastWriter.new(config)
-
       @transcoder = Transcoder.new(@reader, @writer)
 
-      @playlist = Playlist.find(:name => config["playlist"]).first
+      playlist_name = config["playlist"]
+      @playlist = Playlist.first(:name => playlist_name)
+      raise "Can't find playlist '#{playlist_name}'" unless @playlist
     end
 
     def play
@@ -22,7 +23,6 @@ module RustRadio
       end
     end
 
-    # Stream a FLAC file
     def stream(file)
       @transcoder.transcode(file)
     end

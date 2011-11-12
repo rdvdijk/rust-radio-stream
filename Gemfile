@@ -10,3 +10,6 @@ gem "dm-is-list"
 
 gem "thor"
 
+gem "sinatra"
+gem "haml"
+gem "sass"

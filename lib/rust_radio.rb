@@ -16,4 +16,6 @@ module RustRadio
 
   require 'rust_radio/cli/cli'
 
+  require 'rust_radio/web/ui'
+
 end

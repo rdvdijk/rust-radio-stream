@@ -17,10 +17,14 @@ class RustRadio::Show
   property :updated_at,     DateTime
 
   def length
-    song.sum(:length)
+    songs.sum(:length)
   end
 
   def get(index)
-    songs[index].full_file_path
+    songs[index]
+  end
+
+  def short_title
+    "#{title.match(/^([^,]*)/)} #{date.year}"
   end
 end

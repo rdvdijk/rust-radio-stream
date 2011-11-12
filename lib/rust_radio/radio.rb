@@ -26,6 +26,7 @@ module RustRadio
     def stream(file)
       @transcoder.transcode(file)
     end
+
   end
 end
 

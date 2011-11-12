@@ -19,9 +19,14 @@ module RustRadio
     end
 
     desc "play", "Start the stream."
-    method_option :config_file, :type => :string, :default => "config.yml"
+    method_option :config_file, :type => :string, :default => "config/config.yml"
     def play
       RustRadio::Radio.new(options["config_file"]).play
+    end
+
+    desc "web", "Start webserver."
+    def web
+      RustRadio::Web::UI.run!
     end
   end
 end

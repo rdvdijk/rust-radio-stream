@@ -1,0 +1,27 @@
+!!!
+%html
+  %head
+    %title
+      Rust Radio - Control Panel
+
+    %link{href:"/stylesheet.css", type:"text/css", media:"all", rel:"stylesheet"}
+    %script{src:"/jquery.min.js", type:"text/javascript"}
+    %script{src:"/jquery-ui-1.8.16.custom.min.js", type:"text/javascript"}
+    %script{src:"/script.js", type:"text/javascript"}
+
+  %body
+    .container
+      .content[@playlist]
+        %h1
+          - if @playlist.online?
+            %span.status !
+          = @playlist.name
+        .entries
+          - @playlist.entries.each do |entry|
+            %div.entry[entry]{:"data-entry-id" => entry.id}
+              %span.position= entry.position
+              %span.title= entry.show.short_title
+              - if entry.first?
+                .current_song
+                  = "#{entry.current_song+1}/#{entry.show.songs.length}:"
+                  = entry.current_song_title

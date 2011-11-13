@@ -61,7 +61,13 @@ class RustRadio::Playlist
         if first?
           reset!
         end
-        move(:below => other)
+        puts
+        puts "move #{self.id} (#{self.position}) below #{other.id} (#{other.position})"
+        puts
+        result = self.move(:below => other)
+        puts "ok? #{result}"
+        self.save
+        self.reload
       end
     end
 

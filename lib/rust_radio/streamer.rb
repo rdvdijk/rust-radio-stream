@@ -1,6 +1,8 @@
 require 'shout'
 
 module RustRadio
+  RECONNECT_SLEEP = 1.0
+
   class Streamer
     def initialize(config)
       s             = Shout.new
@@ -17,17 +19,39 @@ module RustRadio
     end
 
     def connect
-      puts "[#{@shout.name}] Connecting to #{@shout.host}:#{@shout.port}.."
-      @shout.connect
+      begin
+        log "Connecting."
+        @shout.connect
+        log "Connected."
+      rescue ShoutError => error
+        log "Error connecting: #{error}"
+        case error.message
+        when /^#{ShoutError::SOCKET}/, /^#{ShoutError::NOCONNECT}/
+          log "Sleeping for #{RECONNECT_SLEEP}s."
+          sleep RECONNECT_SLEEP
+          log "Reconnecting."
+          retry
+        else
+          raise error
+        end
+      end
     end
 
     def disconnect
-      puts "[#{@shout.name}] Disconnecting form #{@shout.host}:#{@shout.port}.."
+      log "Disconnecting."
       @shout.disconnect
     end
 
     def send(data)
-      @shout.send data
+      begin
+        @shout.send data
+      rescue ShoutError => error
+        log "Error sending data: #{error}"
+        disconnect # shout doesn't know it has already been disconnected.. (?)
+        connect
+        resend_metadata
+        retry
+      end
     end
 
     def sync
@@ -35,7 +59,18 @@ module RustRadio
     end
 
     def metadata=(metadata)
-      @shout.metadata = metadata
+      @metadata = metadata
+      resend_metadata
+    end
+
+    private
+
+    def resend_metadata
+      @shout.metadata = @metadata
+    end
+
+    def log(message)
+      puts "[#{@shout.name}@#{@shout.host}:#{@shout.port}] #{message}"
     end
   end
 end

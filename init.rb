@@ -17,7 +17,7 @@ host = database["host"]
 database = database["database"]
 
 uri = "postgres://#{[username,password].compact.join(':')}@#{host}/#{database}"
-DataMapper::Logger.new(STDOUT, :debug)
+#DataMapper::Logger.new(STDOUT, :debug)
 DataMapper.setup(:default, uri)
 DataMapper.finalize
 

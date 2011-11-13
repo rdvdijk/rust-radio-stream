@@ -16,12 +16,14 @@
           - if @playlist.online?
             %span.status !
           = @playlist.name
-        .entries
-          - @playlist.entries.each do |entry|
-            %div.entry[entry]{:"data-entry-id" => entry.id}
-              %span.position= entry.position
-              %span.title= entry.show.short_title
-              - if entry.first?
-                .current_song
-                  = "#{entry.current_song+1}/#{entry.show.songs.length}:"
-                  = entry.current_song_title
+        .playlist
+          - @playlist.entries.each_slice(4) do |box_entries|
+            .entries
+              - box_entries.each do |entry|
+                %div.entry[entry]{:"data-entry-id" => entry.id}
+                  %span.position= entry.position
+                  %span.title= entry.show.short_title
+                  - if entry.first? and entry.show.songs.any? # REMOVE THIS SECOND CHECK
+                    .current_song
+                      = "#{entry.current_song+1}/#{entry.show.songs.length}:"
+                      = entry.current_song_title

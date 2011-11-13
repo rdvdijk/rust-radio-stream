@@ -1,4 +1,12 @@
 GIT
+  remote: git@github.com:rdvdijk/dm-is-list.git
+  revision: 2a03c1c30e4bf24048e6c21266c36a3c6360b188
+  branch: v1.2.0.afterbelowfix
+  specs:
+    dm-is-list (1.2.0)
+      dm-adjust (~> 1.2.0)
+
+GIT
   remote: git@github.com:rdvdijk/icanhasaudio.git
   revision: f945aa3cd0e28f99588c634536a050c7939744f9
   specs:
@@ -32,8 +40,6 @@ GEM
     dm-do-adapter (1.2.0)
       data_objects (~> 0.10.6)
       dm-core (~> 1.2.0)
-    dm-is-list (1.2.0)
-      dm-adjust (~> 1.2.0)
     dm-migrations (1.2.0)
       dm-core (~> 1.2.0)
     dm-postgres-adapter (1.2.0)
@@ -87,7 +93,7 @@ PLATFORMS
 
 DEPENDENCIES
   data_mapper
-  dm-is-list
+  dm-is-list!
   dm-postgres-adapter
   flacinfo-rb
   haml

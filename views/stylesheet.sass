@@ -17,23 +17,27 @@ h1
   -moz-border-radius: $amount
   -webkit-border-radius: $amount
 
-.entries
-  padding: 5px
-  background-color: $lighterblue
-  width: 240px
-  border: 1px solid $lightblue
-  +rounded-corners(3px)
+.playlist
 
-  .entry
-    background-color: $blue
-    border-top: 1px solid $lightblue
-    border-bottom: 3px solid $darkblue
-    margin-bottom: 3px
-    padding: 2px 5px 0px
+  .entries
+    float: left
+    margin-right: 10px
+    padding: 5px
+    background-color: $lighterblue
+    width: 240px
+    border: 1px solid $lightblue
     +rounded-corners(3px)
 
-    .position
-      font-weight: bold
-    .current_song
-      font-size: 0.7em
-      font-style: italic
+    .entry
+      background-color: $blue
+      border-top: 1px solid $lightblue
+      border-bottom: 3px solid $darkblue
+      margin-bottom: 3px
+      padding: 2px 5px 0px
+      +rounded-corners(3px)
+
+      .position
+        font-weight: bold
+      .current_song
+        font-size: 0.7em
+        font-style: italic

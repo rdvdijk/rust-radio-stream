@@ -6,7 +6,7 @@ gem "flacinfo-rb"
 
 gem "data_mapper"
 gem "dm-postgres-adapter"
-gem "dm-is-list"
+gem "dm-is-list", :git => "git@github.com:rdvdijk/dm-is-list.git", :branch => "v1.2.0.afterbelowfix"
 
 gem "thor"
 

@@ -14,6 +14,7 @@ module RustRadio
     end
 
     def play
+      @twitter.tweet("Rust Radio is online!")
       begin
         @playlist.play do |song|
           tweet if @playlist.next_show?

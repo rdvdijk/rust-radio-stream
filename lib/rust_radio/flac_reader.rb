@@ -2,8 +2,8 @@ require 'ruby-audio'
 
 module RustRadio
   class FlacReader
-    def update(file_path)
-      @file_path = file_path
+    def update(song)
+      @file_path = song.full_file_path
     end
 
     def read

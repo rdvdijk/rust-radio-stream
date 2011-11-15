@@ -5,9 +5,9 @@ module RustRadio
       @writer = writer
     end
 
-    def transcode(file_path)
-      @reader.update(file_path)
-      @writer.update(file_path)
+    def transcode(song)
+      @reader.update(song)
+      @writer.update(song)
 
       @reader.read do |data|
         @writer.write data

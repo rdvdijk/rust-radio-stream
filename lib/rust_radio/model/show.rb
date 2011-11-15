@@ -27,4 +27,8 @@ class RustRadio::Show
   def short_title
     "#{title.match(/^([^,]*)/)} #{date.year}"
   end
+
+  def long_title
+    "#{artist} @ #{title}. #{date}"
+  end
 end

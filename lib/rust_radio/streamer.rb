@@ -19,6 +19,7 @@ module RustRadio
       @shout = s
     end
 
+    # Connect to the server, and try to reconnect if connecting fails.
     def connect
       begin
         log "Connecting."
@@ -43,6 +44,7 @@ module RustRadio
       @shout.disconnect
     end
 
+    # Send data, and try to reconnect if something goes wrong.
     def send(data)
       begin
         @shout.send data
@@ -55,6 +57,7 @@ module RustRadio
       end
     end
 
+    # Sync, which waits an appropriate time until the next data can be sent.
     def sync
       @shout.sync
     end

@@ -8,6 +8,7 @@ module RustRadio
 
   require 'rust_radio/radio'
 
+  require 'rust_radio/model/drag_drop'
   require 'rust_radio/model/song'
   require 'rust_radio/model/show'
   require 'rust_radio/model/playlist'
@@ -17,5 +18,7 @@ module RustRadio
   require 'rust_radio/cli/cli'
 
   require 'rust_radio/web/ui'
+
+  require 'rust_radio/tweeter'
 
 end

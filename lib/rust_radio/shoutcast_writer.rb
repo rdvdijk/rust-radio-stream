@@ -1,5 +1,3 @@
-require 'flacinfo'
-
 module RustRadio
   class ShoutcastWriter
     def initialize(config)
@@ -11,8 +9,8 @@ module RustRadio
       @encoder = Encoder.new(config)
     end
 
-    def update(file_path)
-      update_metadata(file_path)
+    def update(song)
+      update_metadata(song)
     end
 
     def write(samples)
@@ -43,13 +41,9 @@ module RustRadio
     end
 
     # Set metadata
-    def update_metadata(file_path)
-      flac = FlacInfo.new(file_path)
-      title  = flac.tags["TITLE"]
-      album = flac.tags["ALBUM"]
-
+    def update_metadata(song)
       metadata = ShoutMetadata.new
-      metadata.add "song", "#{title} - (#{album})"
+      metadata.add "song", song.stream_title
       @streamer.metadata = metadata
     end
   end

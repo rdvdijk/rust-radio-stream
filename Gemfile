@@ -13,3 +13,6 @@ gem "thor"
 gem "sinatra"
 gem "haml"
 gem "sass"
+
+gem "twitter"
+

@@ -15,6 +15,7 @@ module RustRadio
       s.genre       = config["genre"]
       s.name        = config["name"]
       s.url         = config["url"]
+      s.bitrate     = config["bitrate"].to_s
       @shout = s
     end
 

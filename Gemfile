@@ -1,5 +1,5 @@
 source "http://rubygems.org"
-gem "ruby-shout"
+gem "ruby-shout", "2.2.1", :git => "git@github.com:rdvdijk/ruby-shout.git"
 gem "ruby-audio"
 gem "icanhasaudio", "0.1.3", :git => "git@github.com:rdvdijk/icanhasaudio.git"
 gem "flacinfo-rb"

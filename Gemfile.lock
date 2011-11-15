@@ -8,7 +8,7 @@ GIT
 
 GIT
   remote: git@github.com:rdvdijk/icanhasaudio.git
-  revision: f945aa3cd0e28f99588c634536a050c7939744f9
+  revision: 23df3ea4e123da4254a7bc80c4af52ea8effedf8
   specs:
     icanhasaudio (0.1.3)
 

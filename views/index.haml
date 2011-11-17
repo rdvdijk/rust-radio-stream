@@ -17,7 +17,7 @@
             %span.status !
           = @playlist.name
         .playlist
-          - @playlist.entries.each_slice(4) do |box_entries|
+          - @playlist.entries.each_slice(10) do |box_entries|
             .entries
               - box_entries.each do |entry|
                 %div.entry[entry]{:"data-entry-id" => entry.id}

@@ -15,4 +15,5 @@ gem "haml"
 gem "sass"
 
 gem "twitter"
+gem "fb_graph"
 

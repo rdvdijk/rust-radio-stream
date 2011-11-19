@@ -2,6 +2,7 @@ require 'twitter'
 
 module RustRadio
   class Tweeter
+
     def initialize(config)
       Twitter.configure do |twitter_config|
         @disabled = config["disabled"]
@@ -22,5 +23,6 @@ module RustRadio
     def show_update(show_info)
       tweet("Now playing: #{show_info}")
     end
+
   end
 end

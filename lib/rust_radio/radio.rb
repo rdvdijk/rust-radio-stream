@@ -6,7 +6,9 @@ module RustRadio
       @reader = FlacReader.new
       @writer = ShoutcastWriter.new(config)
       @transcoder = Transcoder.new(@reader, @writer)
+
       @tweeter = Tweeter.new(config["twitter"])
+      @facebook_poster = FacebookPoster.new(config["facebook"])
 
       playlist_name = config["playlist"]
       @playlist = Playlist.first(:name => playlist_name)
@@ -14,10 +16,13 @@ module RustRadio
     end
 
     def play
-      @twitter.tweet("Rust Radio is online!")
+      online_message = "Rust Radio is online!"
+      @tweeter.tweet(online_message)
+      @facebook_poster.post(online_message)
+
       begin
         @playlist.play do |song|
-          tweet if @playlist.next_show?
+          update_social_media if @playlist.next_show?
           puts "playing: #{song.full_file_path}"
           stream(song)
         end
@@ -30,8 +35,10 @@ module RustRadio
       @transcoder.transcode(song)
     end
 
-    def tweet
-      @tweeter.show_update(@playlist.current_show_title)
+    def update_social_media
+      show_title = @playlist.current_show_title
+      @tweeter.show_update(show_title)
+      @facebook_poster.show_update(show_title)
     end
   end
 end

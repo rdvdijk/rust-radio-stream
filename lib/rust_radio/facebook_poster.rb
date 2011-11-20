@@ -15,7 +15,7 @@ module RustRadio
     end
 
     def show_update(show_info)
-      post("Now playing: #{show_info}"
+      post("Now playing: #{show_info}")
     end
 
   end

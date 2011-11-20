@@ -6,10 +6,17 @@ module RustRadio
       @folder_path = folder_path
       @playlist_name = playlist_name
 
-      collect_files
-      create_show
-      add_songs
-      add_to_playlist
+      Show.transaction do |t|
+        begin
+          collect_files
+          create_show
+          add_songs
+          add_to_playlist
+        rescue Exception => e
+          puts "ERROR: #{e}"
+          t.rollback
+        end
+      end
     end
 
     def collect_files
@@ -23,7 +30,7 @@ module RustRadio
           @info_file = entry
         end
       end
-      raise "couldn't find files..?" if @flac_files.empty? || !@info_file
+      raise "Could not find files in #{@folder_path}" if @flac_files.empty? || !@info_file
     end
 
     def create_show
@@ -49,10 +56,10 @@ module RustRadio
         @show.errors.each do |error|
           puts error
         end
-        raise "Show has already been added."
+        raise "Show has already been added (?)."
       end
 
-      puts "Adding show: #{@show.date}  |   #{@show.artist}  |   #{@show.title}"
+      puts "Adding show: #{@show.date} : #{@show.artist} @ #{@show.title}"
       @show.save
     end
 
@@ -61,8 +68,10 @@ module RustRadio
         info = FlacInfo.new(File.join(@folder_path, flac))
 
         streaminfo = info.streaminfo
-        length = (streaminfo["total_samples"] / streaminfo["samplerate"].to_f) * 1000
-        title = info.tags["TITLE"]
+        samplerate = streaminfo["samplerate"]
+        raise "Incompatible sample rate (#{samplerate}) in #{flac}" unless samplerate == 44100
+        length = (streaminfo["total_samples"] / samplerate.to_f) * 1000
+        title = info.tags["TITLE"] || raise("Tag 'TITLE' not set in #{flac}")
 
         @show.songs.create(file_path: flac,
                   title: title,
@@ -70,13 +79,13 @@ module RustRadio
                   sort_order: index + 1)
         putc "."
       end
+      puts
     end
 
     def add_to_playlist
       @playlist = Playlist.first_or_create(name: @playlist_name)
-      @playlist.entries.create(show:@show)
+      @playlist.entries.create(show: @show)
 
-      puts
       puts "Added to playlist '#{@playlist.name}'."
     end
   end

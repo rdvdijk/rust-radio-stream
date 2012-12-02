@@ -1,5 +1,6 @@
 module RustRadio
   class Radio
+
     def initialize(config_file)
       config = YAML.load_file(config_file)["config"]
 
@@ -17,13 +18,13 @@ module RustRadio
     end
 
     def play
-      # online_message = "Rust Radio is online!"
-      # @tweeter.tweet(online_message)
-      # @facebook_poster.post(online_message)
+      online_message = "Rust Radio is online!"
+      @tweeter.tweet(online_message)
+      @facebook_poster.post(online_message)
 
       begin
         @playlist.play do |song|
-          # update_social_media if @playlist.next_show?
+          update_social_media if @playlist.next_show?
           puts "playing: #{song.full_file_path}"
           stream(song)
         end
@@ -36,11 +37,11 @@ module RustRadio
       @transcoder.transcode(song)
     end
 
-    # def update_social_media
-    #   show_title = @playlist.current_show_title
-    #   @tweeter.show_update(show_title)
-    #   @facebook_poster.show_update(show_title)
-    # end
+    def update_social_media
+      show_title = @playlist.current_show_title
+      @tweeter.show_update(show_title)
+      @facebook_poster.show_update(show_title)
+    end
+
   end
 end
-

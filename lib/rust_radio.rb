@@ -1,10 +1,15 @@
 module RustRadio
 
   require 'rust_radio/streamer'
-  require 'rust_radio/encoder'
+
+  require 'rust_radio/mp3_encoder'
+  require 'rust_radio/vorbis_encoder'
   require 'rust_radio/transcoder'
+
   require 'rust_radio/flac_reader'
+  require 'rust_radio/writer'
   require 'rust_radio/shoutcast_writer'
+  require 'rust_radio/icecast_writer'
 
   require 'rust_radio/radio'
 

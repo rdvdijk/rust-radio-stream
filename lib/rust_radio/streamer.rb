@@ -8,9 +8,10 @@ module RustRadio
       s             = Shout.new
       s.host        = config["hostname"]
       s.port        = config["port"]
+      s.mount       = config["mount"] if config["mount"]
       s.password    = config["password"]
-      s.format      = Shout::MP3
-      s.protocol    = Shout::ICY
+      s.format      = Shout.const_get(config["format"])
+      s.protocol    = Shout.const_get(config["protocol"])
       s.description = config["description"]
       s.genre       = config["genre"]
       s.name        = config["name"]

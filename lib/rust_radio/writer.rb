@@ -35,22 +35,5 @@ module RustRadio
       @streamer.metadata = metadata
     end
 
-    def buffer_to_samples(buffer)
-      samples = []
-      buffer.each do |left, right|
-        samples << left << right
-      end
-      samples
-    end
-
   end
 end
-
-# # monkey patch, is fixed in unreleased version of ruby-audio
-# class RubyAudio::Buffer
-#   def real_each
-#     self.real_size.times do |i|
-#       yield self[i]
-#     end
-#   end
-# end

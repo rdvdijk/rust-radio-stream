@@ -63,6 +63,11 @@ module RustRadio
       @shout.sync
     end
 
+    # Time to wait in milliseconds
+    def delay
+      @shout.delay
+    end
+
     def metadata=(metadata)
       @metadata = metadata
       resend_metadata

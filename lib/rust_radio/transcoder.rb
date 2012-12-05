@@ -4,6 +4,7 @@ module RustRadio
     def initialize(reader, writers)
       @reader  = reader
       @writers = writers
+      @synchronization_time = Time.now.to_f
     end
 
     def transcode(song)
@@ -14,10 +15,13 @@ module RustRadio
       end
 
       @reader.read do |buffer|
+        wait until synchronize?
+
         @writers.each do |writer|
           writer.write buffer
         end
-        @writers.first.sync
+
+        set_synchronization_delay!
       end
     end
 
@@ -25,6 +29,24 @@ module RustRadio
       @writers.each do |writer|
         writer.close
       end
+    end
+
+    private
+
+    def set_synchronization_delay!
+      @synchronization_time = Time.now.to_f + shortest_delay/1000.0
+    end
+
+    def shortest_delay
+      @writers.map(&:delay).min
+    end
+
+    def wait
+      sleep 0.01
+    end
+
+    def synchronize?
+      Time.now.to_f >= @synchronization_time
     end
 
   end

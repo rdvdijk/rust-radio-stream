@@ -19,7 +19,11 @@ module RustRadio
     end
 
     def sync
-      @streamer.sync # sleep a while
+      @streamer.sync
+    end
+
+    def delay
+      @streamer.delay
     end
 
     private

@@ -4,20 +4,28 @@ module RustRadio
   RECONNECT_SLEEP = 1.0
 
   class Streamer
-    def initialize(config)
+    def initialize(general, type, mount)
       s             = Shout.new
-      s.host        = config["hostname"]
-      s.port        = config["port"]
-      s.mount       = config["mount"] if config["mount"]
-      s.password    = config["password"]
-      s.format      = Shout.const_get(config["format"])
-      s.protocol    = Shout.const_get(config["protocol"])
-      s.description = config["description"]
-      s.genre       = config["genre"]
-      s.name        = config["name"]
-      s.url         = config["url"]
-      s.bitrate     = config["bitrate"].to_s
+
+      # general
+      s.description = general["description"]
+      s.genre       = general["genre"]
+      s.name        = general["name"]
+      s.url         = general["url"]
+
+      # type
+      s.format      = Shout.const_get(type["format"])
+      s.protocol    = Shout.const_get(type["protocol"])
+      s.password    = type["password"]
+      s.bitrate     = type["bitrate"].to_s
+
+      # mount
+      s.host        = mount["hostname"]
+      s.port        = mount["port"]
+      s.mount       = mount["mount"] if mount["mount"]
+
       @shout = s
+      @send_metadata = mount["send_metadata"]
     end
 
     # Connect to the server, and try to reconnect if connecting fails.
@@ -69,8 +77,10 @@ module RustRadio
     end
 
     def metadata=(metadata)
-      @metadata = metadata
-      resend_metadata
+      if @send_metadata
+        @metadata = metadata
+        resend_metadata
+      end
     end
 
     private
@@ -80,7 +90,7 @@ module RustRadio
     end
 
     def log(message)
-      puts "[#{@shout.name}@#{@shout.host}:#{@shout.port}] #{message}"
+      puts "[#{@shout.name}@#{@shout.host}:#{@shout.port}#{@shout.mount}] #{message}"
     end
   end
 end

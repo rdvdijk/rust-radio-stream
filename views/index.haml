@@ -30,10 +30,11 @@
                     = "#{entry.current_song+1}/#{entry.show.songs.length}:"
                     %strong= entry.current_song_title
 
-        %h2 Shows not on playlist
-        .shows
-          - @shows_not_on_playlist.each do |show|
-            .show[show]{:"data-show-id" => show.id}
-              %a.add{href:"#", title:"add show"}
-                = show.short_title
-                %strong +
+        - if @shows_not_on_playlist.any?
+          %h2 Shows not on playlist
+          .shows
+            - @shows_not_on_playlist.each do |show|
+              .show[show]{:"data-show-id" => show.id}
+                %a.add{href:"#", title:"add show"}
+                  = show.short_title
+                  %strong +

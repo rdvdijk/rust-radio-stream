@@ -5,6 +5,8 @@ $lightblue: #b2d1e5
 $lighterblue: #e9f2f9
 
 .container
+  width: 640px
+  margin: 0 auto
   font:
     family: sans-serif
 
@@ -20,11 +22,9 @@ h1
 .playlist
 
   .entries
-    float: left
     margin-right: 10px
     padding: 5px
     background-color: $lighterblue
-    width: 240px
     border: 1px solid $lightblue
     +rounded-corners(3px)
 
@@ -38,6 +38,35 @@ h1
 
       .position
         font-weight: bold
+
+      .controls
+        float: right
+        font-size: 0.8em
+
+        a
+          text-decoration: none
+          color: black
+
+          &.to-top
+            color: #060
+
+          &.remove
+            color: #c00
+
       .current_song
         font-size: 0.7em
         font-style: italic
+
+.shows
+  .show
+    float: left
+    border: 1px solid black
+    margin-right: 5px
+    +rounded-corners(3px)
+
+    a
+      color: black
+      text-decoration: none
+      display: inline-block
+      padding: 5px
+

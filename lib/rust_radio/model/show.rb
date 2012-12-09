@@ -29,6 +29,6 @@ class RustRadio::Show
   end
 
   def long_title
-    "#{artist} @ #{title}. #{date}"
+    "#{date} #{artist} @ #{title}"
   end
 end

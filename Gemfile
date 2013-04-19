@@ -10,6 +10,7 @@ gem "flacinfo-rb"
 
 gem 'activerecord'
 gem 'pg'
+gem 'acts_as_list', require: false
 
 gem "thor"
 

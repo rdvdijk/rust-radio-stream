@@ -1,6 +1,10 @@
+require 'acts_as_list'
+
 module RustRadio
   class PlaylistEntry < ActiveRecord::Base
     include RustRadio::DragDrop
+
+    acts_as_list scope: :playlist
 
     belongs_to :playlist
     belongs_to :show
@@ -21,10 +25,6 @@ module RustRadio
       next_index = (current_song+1) % show.songs.length
       self.current_song = next_index
       save
-    end
-
-    def first?
-      position == 1
     end
 
     def starting?

@@ -4,10 +4,10 @@ module RustRadio
     def move_to_top
       unless first?
         if playlist.online? and !first?
-          move(:below => playlist.first)
+          insert_at(2)
         else
           playlist.first.reset!
-          move(:top)
+          move_to_top
         end
       end
     end
@@ -20,13 +20,13 @@ module RustRadio
         if first?
           # can't move the first entry while playing
         else
-          move(:below => other)
+          insert_at(other.position+1)
         end
       else
         if first?
           reset!
         end
-        result = self.move(:below => other)
+        insert_at(other.position+1)
         self.save
         self.reload
       end

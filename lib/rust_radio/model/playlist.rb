@@ -12,7 +12,7 @@ module RustRadio
         entry.next
 
         if next_show?
-          entry.move(:bottom)
+          entry.move_to_bottom
           reload
         end
       end

@@ -14,6 +14,7 @@ gem 'acts_as_list', require: false
 
 gem "thor"
 
+gem "puma"
 gem "sinatra"
 gem "haml"
 gem "sass"

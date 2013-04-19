@@ -1,12 +1,4 @@
 GIT
-  remote: git@github.com:rdvdijk/dm-is-list.git
-  revision: 2a03c1c30e4bf24048e6c21266c36a3c6360b188
-  branch: v1.2.0.afterbelowfix
-  specs:
-    dm-is-list (1.2.0)
-      dm-adjust (~> 1.2.0)
-
-GIT
   remote: git@github.com:rdvdijk/icanhasaudio.git
   revision: 23df3ea4e123da4254a7bc80c4af52ea8effedf8
   specs:
@@ -19,67 +11,25 @@ GIT
     ruby-shout (2.2.1)
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
+    activemodel (3.2.13)
+      activesupport (= 3.2.13)
+      builder (~> 3.0.0)
+    activerecord (3.2.13)
+      activemodel (= 3.2.13)
+      activesupport (= 3.2.13)
+      arel (~> 3.0.2)
+      tzinfo (~> 0.3.29)
     activesupport (3.2.13)
       i18n (= 0.6.1)
       multi_json (~> 1.0)
-    addressable (2.2.8)
+    arel (3.0.2)
     attr_required (0.0.5)
-    bcrypt-ruby (3.0.1)
-    data_mapper (1.2.0)
-      dm-aggregates (~> 1.2.0)
-      dm-constraints (~> 1.2.0)
-      dm-core (~> 1.2.0)
-      dm-migrations (~> 1.2.0)
-      dm-serializer (~> 1.2.0)
-      dm-timestamps (~> 1.2.0)
-      dm-transactions (~> 1.2.0)
-      dm-types (~> 1.2.0)
-      dm-validations (~> 1.2.0)
-    data_objects (0.10.12)
-      addressable (~> 2.1)
-    dm-adjust (1.2.0)
-      dm-core (~> 1.2.0)
-    dm-aggregates (1.2.0)
-      dm-core (~> 1.2.0)
-    dm-constraints (1.2.0)
-      dm-core (~> 1.2.0)
-    dm-core (1.2.0)
-      addressable (~> 2.2.6)
-    dm-do-adapter (1.2.0)
-      data_objects (~> 0.10.6)
-      dm-core (~> 1.2.0)
-    dm-migrations (1.2.0)
-      dm-core (~> 1.2.0)
-    dm-postgres-adapter (1.2.0)
-      dm-do-adapter (~> 1.2.0)
-      do_postgres (~> 0.10.6)
-    dm-serializer (1.2.2)
-      dm-core (~> 1.2.0)
-      fastercsv (~> 1.5)
-      json (~> 1.6)
-      json_pure (~> 1.6)
-      multi_json (~> 1.0)
-    dm-timestamps (1.2.0)
-      dm-core (~> 1.2.0)
-    dm-transactions (1.2.0)
-      dm-core (~> 1.2.0)
-    dm-types (1.2.2)
-      bcrypt-ruby (~> 3.0)
-      dm-core (~> 1.2.0)
-      fastercsv (~> 1.5)
-      json (~> 1.6)
-      multi_json (~> 1.0)
-      stringex (~> 1.4)
-      uuidtools (~> 2.1)
-    dm-validations (1.2.0)
-      dm-core (~> 1.2.0)
-    do_postgres (0.10.12)
-      data_objects (= 0.10.12)
+    builder (3.0.4)
+    coderay (1.0.9)
     faraday (0.8.7)
       multipart-post (~> 1.1)
-    fastercsv (1.5.5)
     fb_graph (2.6.7)
       httpclient (>= 2.2.0.2)
       multi_json (>= 1.3)
@@ -90,10 +40,16 @@ GEM
       tilt
     httpclient (2.3.3)
     i18n (0.6.1)
-    json (1.7.7)
-    json_pure (1.7.7)
+    method_source (0.8.1)
     multi_json (1.7.2)
     multipart-post (1.2.0)
+    pg (0.15.1)
+    pry (0.9.12)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    pry-nav (0.2.3)
+      pry (~> 0.9.10)
     rack (1.5.2)
     rack-oauth2 (1.0.4)
       activesupport (>= 2.3)
@@ -110,7 +66,7 @@ GEM
       rack (~> 1.5, >= 1.5.2)
       rack-protection (~> 1.4)
       tilt (~> 1.3, >= 1.3.4)
-    stringex (1.5.1)
+    slop (3.4.4)
     thor (0.18.1)
     tilt (1.3.7)
     twitter (4.6.2)
@@ -118,19 +74,18 @@ GEM
       multi_json (~> 1.0)
       simple_oauth (~> 0.2)
     tzinfo (0.3.37)
-    uuidtools (2.1.3)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  data_mapper
-  dm-is-list!
-  dm-postgres-adapter
+  activerecord
   fb_graph
   flacinfo-rb
   haml
   icanhasaudio (= 0.1.3)!
+  pg
+  pry-nav
   ruby-audio
   ruby-shout (= 2.2.1)!
   sass

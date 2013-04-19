@@ -25,4 +25,15 @@ namespace :sanity do
       end
     end
   end
+
+  desc "Do a dry-run of playing songs."
+  task :dryrun do
+    require 'pry'
+    require './init'
+    RustRadio::Playlist.all.each do |playlist|
+      playlist.play do |song|
+        puts song.stream_title
+      end
+    end
+  end
 end

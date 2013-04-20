@@ -1,6 +1,7 @@
 namespace :db do
   desc "Run ActiveRecord migrations."
   task :migrate do #=> :environment do
+    require './init'
     ActiveRecord::Migrator.migrate('db/migrate', ENV["VERSION"] ? ENV["VERSION"].to_i : nil )
   end
 end

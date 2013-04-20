@@ -17,6 +17,7 @@ module RustRadio
           stream(song)
         end
       rescue Interrupt => e
+        p e
         @transcoder.close
       end
     end
@@ -37,7 +38,7 @@ module RustRadio
 
     def initialize_playlist
       playlist_name = @config["playlist"]
-      @playlist = Playlist.first(:name => playlist_name)
+      @playlist = Playlist.where(:name => playlist_name).first
       raise "Can't find playlist '#{playlist_name}'" unless @playlist
     end
 

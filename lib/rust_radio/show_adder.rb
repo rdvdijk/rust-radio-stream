@@ -6,16 +6,15 @@ module RustRadio
       @folder_path = folder_path
       @playlist_name = playlist_name
 
-      Show.transaction do |t|
-        begin
+      begin
+        Show.transaction do |t|
           collect_files
           create_show
           add_songs
           add_to_playlist
-        rescue Exception => e
-          puts "ERROR: #{e}"
-          t.rollback
         end
+      rescue Exception => e
+        puts "ERROR: #{e}"
       end
     end
 
@@ -30,8 +29,7 @@ module RustRadio
           @info_file = entry
         end
       end
-      raise "Could not find files in #{@folder_path}" if @flac_files.empty? || !@info_file
-    end
+      raise "Could not find files in #{@folder_path}" if @flac_files.empty? || !@info_file end
 
     def create_show
       file = File.open(File.join(@folder_path, @info_file))
@@ -48,18 +46,18 @@ module RustRadio
       @show = Show.new(folder_path: @folder_path,
                   artist: artist,
                   date: Date.parse(date),
-                  title: city_state,
+                  city_state: city_state,
+                  venue: venue,
+                  festival: festival,
                   info_file: content,
                   setlist_identifier: "#{date.gsub(/[^\d]/,'')}0")
 
       if !@show.valid?
-        @show.errors.each do |error|
-          puts error
-        end
+        puts "Could not add show: #{@show.errors.full_messages.join(',')}"
         raise "Show has already been added (?)."
       end
 
-      puts "Adding show: #{@show.date} : #{@show.artist} @ #{@show.title}"
+      puts "Adding show: #{@show.date} : #{@show.artist} @ #{@show.city_state}"
       @show.save
     end
 

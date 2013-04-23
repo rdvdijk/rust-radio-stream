@@ -8,6 +8,7 @@ module RustRadio
       online!
       while true
         entry = first
+        entry.mark_start_of_song!
         yield entry.song_to_play
         entry.next
 

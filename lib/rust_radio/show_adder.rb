@@ -11,6 +11,7 @@ module RustRadio
           collect_files
           create_show
           add_songs
+          update_show_length
           add_to_playlist
         end
       rescue Exception => e
@@ -58,7 +59,7 @@ module RustRadio
       end
 
       puts "Adding show: #{@show.date} : #{@show.artist} @ #{@show.city_state}"
-      @show.save
+      @show.save!
     end
 
     def add_songs
@@ -78,6 +79,11 @@ module RustRadio
         putc "."
       end
       puts
+    end
+
+    def update_show_length
+      @show.length = @show.songs.sum(:length)
+      @show.save!
     end
 
     def add_to_playlist

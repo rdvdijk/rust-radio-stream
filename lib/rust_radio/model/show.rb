@@ -5,10 +5,6 @@ module RustRadio
 
     validates_uniqueness_of :folder_path
 
-    def length
-      songs.sum(:length)
-    end
-
     def get(index)
       songs[index]
     end

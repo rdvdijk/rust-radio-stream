@@ -24,6 +24,7 @@ module RustRadio
     def next
       next_index = (current_song+1) % show.songs.length
       self.current_song = next_index
+      self.song_started_at = Time.now
       save
     end
 

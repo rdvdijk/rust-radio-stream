@@ -1,3 +1,6 @@
+# Defaults to UTC, but Rails app runs in CEST..
+ENV['TZ'] = "CEST"
+
 require 'rubygems'
 require 'bundler'
 

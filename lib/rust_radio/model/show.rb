@@ -10,7 +10,7 @@ module RustRadio
     end
 
     def short_title
-      "#{city_title.match(/^([^,]*)/)} #{date.year}"
+      "#{city_state.match(/^([^,]*)/)} #{date.year}"
     end
 
     def long_title

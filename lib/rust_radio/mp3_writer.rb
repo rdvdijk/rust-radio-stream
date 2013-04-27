@@ -1,8 +1,8 @@
 module RustRadio
-  class ShoutcastWriter < Writer
+  class MP3Writer < Writer
 
     def initialize(config)
-      super(config, "shoutcast")
+      super(config, "mp3")
 
       @encoder = MP3Encoder.new(config)
     end

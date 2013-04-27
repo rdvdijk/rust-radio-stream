@@ -10,8 +10,8 @@ module RustRadio
 
   require 'rust_radio/flac_reader'
   require 'rust_radio/writer'
-  require 'rust_radio/shoutcast_writer'
-  require 'rust_radio/icecast_writer'
+  require 'rust_radio/mp3_writer'
+  require 'rust_radio/vorbis_writer'
 
   require 'rust_radio/radio'
 

@@ -6,7 +6,7 @@ module RustRadio
       @streamers = []
 
       config[type]["servers"].each do |mount|
-        streamer = RustRadio::Streamer.new(config, config[type], mount)
+        streamer = RustRadio::Streamer.new(config, mount)
         streamer.connect
         @streamers << streamer
       end

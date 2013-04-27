@@ -4,7 +4,7 @@ module RustRadio
   RECONNECT_SLEEP = 1.0
 
   class Streamer
-    def initialize(general, type, mount)
+    def initialize(general, mount)
       s             = Shout.new
 
       # general
@@ -13,15 +13,13 @@ module RustRadio
       s.name        = general["name"]
       s.url         = general["url"]
 
-      # type
-      s.format      = Shout.const_get(type["format"])
-      s.protocol    = Shout.const_get(type["protocol"])
-      s.password    = type["password"]
-      s.bitrate     = type["bitrate"].to_s
-
       # mount
       s.host        = mount["hostname"]
       s.port        = mount["port"]
+      s.password    = mount["password"]
+      s.protocol    = Shout.const_get(mount["protocol"])
+      s.format      = Shout.const_get(mount["format"])
+      s.bitrate     = mount["bitrate"].to_s
       s.mount       = mount["mount"] if mount["mount"]
 
       @shout = s

@@ -1,8 +1,8 @@
 module RustRadio
-  class IcecastWriter < Writer
+  class VorbisWriter < Writer
 
     def initialize(config)
-      super(config, "icecast")
+      super(config, "vorbis")
 
       @encoder = VorbisEncoder.new(config)
     end

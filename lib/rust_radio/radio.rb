@@ -25,10 +25,10 @@ module RustRadio
     private
 
     def initialize_radio
-      @reader           = FlacReader.new
-      @shoutcast_writer = ShoutcastWriter.new(@config)
-      @icecast_writer   = IcecastWriter.new(@config)
-      @transcoder       = Transcoder.new(@reader, [@shoutcast_writer, @icecast_writer])
+      flac_reader   = FlacReader.new
+      mp3_writer    = MP3Writer.new(@config)
+      vorbis_writer = VorbisWriter.new(@config)
+      @transcoder   = Transcoder.new(flac_reader, [mp3_writer, vorbis_writer])
     end
 
     def initialize_social_media

@@ -5,7 +5,7 @@ module RustRadio
     def initialize(config)
       encoder = Audio::MPEG::Encoder.new
       encoder.vbr_type = Audio::MPEG::Encoder::VBR_OFF
-      encoder.bitrate = config["shoutcast"]["bitrate"]
+      encoder.bitrate = config["mp3"]["bitrate"]
       encoder.init
       @encoder = encoder
     end

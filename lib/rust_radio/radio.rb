@@ -9,8 +9,6 @@ module RustRadio
     end
 
     def play
-      social_media_online!
-
       begin
         @playlist.play do |song|
           update_show_title if @playlist.next_show?
@@ -55,12 +53,6 @@ module RustRadio
     def social_media_next_show!(message)
       @tweeter.show_update(message)
       @facebook_poster.show_update(message)
-    end
-
-    def social_media_online!
-      online_message = "Rust Radio is online! Tune in now on http://www.rustradio.org/"
-      @tweeter.tweet(online_message)
-      @facebook_poster.post(online_message)
     end
 
   end

@@ -1,6 +1,6 @@
 // make list sortable
 $(function() {
-  $(".entries").sortable({
+  $(".entries table tbody").sortable({
     connectWith: ".entries",
     opacity: 0.75,
     stop: function(event, ui) {
@@ -39,9 +39,8 @@ $(function() {
 
 // add show
 $(function() {
-  $(".show .add").click(function() {
-    item = $(this).parents(".show")
-    var showId = item.attr("data-show-id");
+  $(".btn.add").click(function() {
+    var showId = $(this).data("showId");
     add(showId);
   });
 });

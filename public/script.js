@@ -49,24 +49,28 @@ $(function() {
 // Server interactions:
 function moveToTop(entryId) {
   $.post("/move/" + entryId + "/to_top", function() {
-    location.reload();
+    reloadPage();
   });
 }
 
 function moveBelow(entryId, otherEntryId) {
   $.post("/move/" + entryId + "/below/" + otherEntryId, function() {
-    location.reload();
+    reloadPage();
   });
 }
 
 function remove(entryId) {
   $.post("/remove/" + entryId, function() {
-    location.reload();
+    reloadPage();
   });
 }
 
 function add(showId) {
   $.post("/add/" + showId, function() {
-    location.reload();
+    reloadPage();
   });
+}
+
+function reloadPage() {
+  location.reload();
 }

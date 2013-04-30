@@ -7,7 +7,7 @@ module RustRadio
           insert_at(2)
         else
           playlist.first.reset!
-          move_to_top
+          super
         end
       end
     end
@@ -16,17 +16,20 @@ module RustRadio
     # Reset the current song if moving the first entry.
     # Don't move the first entry when online.
     def move_below(other)
+      new_position = other.position
+      new_position += 1 if position >= other.position
+
       if playlist.online?
         if first?
           # can't move the first entry while playing
         else
-          insert_at(other.position+1)
+          insert_at(new_position)
         end
       else
         if first?
           reset!
         end
-        insert_at(other.position+1)
+        insert_at(new_position)
         self.save
         self.reload
       end

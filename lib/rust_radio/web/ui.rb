@@ -40,7 +40,7 @@ module RustRadio
       post "/move/:entry_id/below/:other_entry_id" do |entry_id, other_entry_id|
         entry = PlaylistEntry.find(entry_id)
         other_entry = PlaylistEntry.find(other_entry_id)
-        entry.insert_at(other_entry.position)
+        entry.move_below(other_entry)
         "ok"
       end
 

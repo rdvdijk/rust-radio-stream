@@ -2,12 +2,13 @@ require 'acts_as_list'
 
 module RustRadio
   class PlaylistEntry < ActiveRecord::Base
-    include RustRadio::DragDrop
 
     acts_as_list scope: :playlist
 
     belongs_to :playlist
     belongs_to :show
+
+    include RustRadio::DragDrop
 
     def song_to_play
       show.get(current_song)

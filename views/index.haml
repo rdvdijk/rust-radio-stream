@@ -36,6 +36,14 @@
                         .current_song
                           = "#{entry.current_song+1}/#{entry.show.songs.length}:"
                           %strong= entry.current_song_title
+
+                      - unless entry.first?
+                        %span.muted
+                          &ndash;
+                          %small
+                            = surround('(',')') do
+                              last played:
+                              = entry.show.last_played_at
                     %td.controls
                       %a.btn.btn-mini.to-top{href:"#", title:"move to the top"}
                         %i.icon-arrow-up

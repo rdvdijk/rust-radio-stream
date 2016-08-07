@@ -4,10 +4,6 @@ gem "ruby-audio"
 gem "icanhasaudio", "0.1.3", :git => "git@github.com:rdvdijk/icanhasaudio.git"
 gem "flacinfo-rb"
 
-# gem "data_mapper"
-# gem "dm-postgres-adapter"
-# gem "dm-is-list", :git => "git@github.com:rdvdijk/dm-is-list.git", :branch => "v1.2.0.afterbelowfix"
-
 gem 'activerecord', "3.2.22.2"
 gem 'pg'
 gem 'acts_as_list', "0.7.4", require: false

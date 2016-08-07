@@ -43,7 +43,7 @@ config:
     access_token: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     disabled: true
 
-  tunein:
+  tune_in:
     station_id: "s000000"
     partner_id: "xxxxxxxx"
     partner_key: "xxxxxxxxxxxx"

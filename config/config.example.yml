@@ -42,3 +42,9 @@ config:
   facebook:
     access_token: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     disabled: true
+
+  tunein:
+    station_id: "s000000"
+    partner_id: "xxxxxxxx"
+    partner_key: "xxxxxxxxxxxx"
+    disabled: false

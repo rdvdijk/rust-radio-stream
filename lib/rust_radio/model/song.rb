@@ -12,11 +12,18 @@ module RustRadio
     end
 
     def stream_title
-      flac = FlacInfo.new(full_file_path)
-      title  = flac.tags["TITLE"]
-      album = flac.tags["ALBUM"]
-
-      "#{title} (#{album})"
+      song_info = info
+      "#{song_info[:title]} (#{song_info[:album]})"
     end
+
+    def info
+      flac = FlacInfo.new(full_file_path)
+      {
+        title: flac.tags["TITLE"],
+        artist: flac.tags["ARTIST"],
+        album: flac.tags["ALBUM"]
+      }
+    end
+
   end
 end

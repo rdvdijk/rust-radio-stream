@@ -16,10 +16,10 @@ namespace :sanity do
 
       playlist.entries.each do |entry|
         show = entry.show
-        puts "  Show ##{show.id} :: #{File.exists? show.folder_path} :: #{show.date} #{show.title} #{show.artist}"
+        puts "  Show ##{show.id} :: #{File.exists? show.folder_path} :: #{show.date} #{show.city_state} #{show.artist}"
 
         show.songs.each do |song|
-          puts "    Song #{song.id} :: #{File.exists? song.full_file_path} :: #{song.sort_order}. #{song.title} (#{song.length})"
+          puts "    Song #{song.id} :: #{song.full_file_path} #{File.exists? song.full_file_path} :: #{song.sort_order}. #{song.title} (#{song.length})"
 
           raise "File not found: #{song.full_file_path}" unless File.exists?(song.full_file_path)
         end

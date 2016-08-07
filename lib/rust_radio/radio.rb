@@ -32,6 +32,7 @@ module RustRadio
     def initialize_social_media
       @tweeter         = Tweeter.new(@config["twitter"])
       @facebook_poster = FacebookPoster.new(@config["facebook"])
+      @tune_in         = TuneIn.new(@config["tune_in"])
     end
 
     def initialize_playlist
@@ -42,6 +43,7 @@ module RustRadio
 
     def stream(song)
       puts "playing: #{song.full_file_path}"
+      social_media_next_song!(song)
       @transcoder.transcode(song)
     end
 
@@ -50,10 +52,13 @@ module RustRadio
       social_media_next_show!(show_title)
     end
 
+    def social_media_next_song!(song)
+      @tune_in.song_update(song)
+    end
+
     def social_media_next_show!(message)
       @tweeter.show_update(message)
       @facebook_poster.show_update(message)
     end
-
   end
 end

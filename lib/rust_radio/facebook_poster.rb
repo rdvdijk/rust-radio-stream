@@ -1,11 +1,11 @@
-require "fb_graph"
+require "fb_graph2"
 
 module RustRadio
   class FacebookPoster
 
     def initialize(config)
       @disabled = config["disabled"]
-      @page = FbGraph::User.me(config["access_token"])
+      @page = FbGraph2::User.me(config["access_token"])
     end
 
     def post(message)

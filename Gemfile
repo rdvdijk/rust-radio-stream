@@ -1,5 +1,5 @@
 source "https://rubygems.org"
-gem "ruby-shout", "2.2.1", :git => "git@github.com:rdvdijk/ruby-shout.git"
+gem "ruby-shout", "2.2.2", :git => "git@github.com:niko/ruby-shout.git"
 gem "ruby-audio"
 gem "icanhasaudio", "0.1.3", :git => "git@github.com:rdvdijk/icanhasaudio.git"
 gem "flacinfo-rb"
@@ -20,7 +20,9 @@ gem "haml"
 gem "sass"
 
 gem "twitter", ">= 5.16.0"
-gem "fb_graph", "2.6.7"
-gem "httpclient", "2.5.2"
+gem "fb_graph2", "0.7.7"
+gem "httpclient"
+
+gem "rack-oauth2", "1.3.1"
 
 gem "pry-nav"

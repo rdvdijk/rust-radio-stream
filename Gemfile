@@ -21,5 +21,6 @@ gem "sass"
 
 gem "twitter"
 gem "fb_graph"
+gem "httpclient", ">= 2.4.0"
 
 gem "pry-nav"

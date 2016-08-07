@@ -8,19 +8,19 @@ gem "flacinfo-rb"
 # gem "dm-postgres-adapter"
 # gem "dm-is-list", :git => "git@github.com:rdvdijk/dm-is-list.git", :branch => "v1.2.0.afterbelowfix"
 
-gem 'activerecord'
+gem 'activerecord', "3.2.22.2"
 gem 'pg'
-gem 'acts_as_list', require: false
+gem 'acts_as_list', "0.7.4", require: false
 
 gem "thor"
 
-gem "puma"
+gem "puma", "1.6.3"
 gem "sinatra"
 gem "haml"
 gem "sass"
 
-gem "twitter"
-gem "fb_graph"
-gem "httpclient", ">= 2.4.0"
+gem "twitter", ">= 5.16.0"
+gem "fb_graph", "2.6.7"
+gem "httpclient", "2.5.2"
 
 gem "pry-nav"

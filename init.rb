@@ -1,7 +1,8 @@
+# Defaults to UTC, but Rails app runs in CEST..
+ENV['TZ'] = "CEST"
+
 require 'rubygems'
 require 'bundler'
-require 'data_mapper'
-require 'dm-is-list'
 
 Bundler.setup
 
@@ -13,11 +14,14 @@ config = YAML.load_file("config/config.yml")["config"]
 database = config["database"]
 username = database["username"]
 password = database["password"]
-host = database["host"]
+hostname = database["hostname"]
 database = database["database"]
 
-uri = "postgres://#{[username,password].compact.join(':')}@#{host}/#{database}"
-#DataMapper::Logger.new(STDOUT, :debug)
-DataMapper.setup(:default, uri)
-DataMapper.finalize
+ActiveRecord::Base.establish_connection(
+  :adapter  => "postgresql",
+  :host     => hostname,
+  :username => username,
+  :password => password,
+  :database => database
+)
 

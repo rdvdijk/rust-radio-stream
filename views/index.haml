@@ -4,26 +4,55 @@
     %title
       Rust Radio - Control Panel
 
-    %link{href:"/stylesheet.css", type:"text/css", media:"all", rel:"stylesheet"}
-    %script{src:"/jquery.min.js", type:"text/javascript"}
-    %script{src:"/jquery-ui-1.8.16.custom.min.js", type:"text/javascript"}
-    %script{src:"/script.js", type:"text/javascript"}
+    %link{href:"/css/bootstrap.css", type:"text/css", media:"all", rel:"stylesheet"}
+
+    %script{src:"/js/jquery.min.js", type:"text/javascript"}
+    %script{src:"/js/jquery-ui-1.8.16.custom.min.js", type:"text/javascript"}
+    %script{src:"/js/bootstrap.js", type:"text/javascript"}
+    %script{src:"/js/script.js", type:"text/javascript"}
 
   %body
     .container
       .content[@playlist]
-        %h1
-          - if @playlist.online?
-            %span.status !
+        %h2
           = @playlist.name
+          - if @playlist.online?
+            %span.badge.badge-important online!
         .playlist
-          - @playlist.entries.each_slice(15) do |box_entries|
-            .entries
-              - box_entries.each do |entry|
-                %div.entry[entry]{:"data-entry-id" => entry.id}
-                  %span.position= entry.position
-                  %span.title= entry.show.short_title
-                  - if entry.first? and entry.show.songs.any? # REMOVE THIS SECOND CHECK
-                    .current_song
-                      = "#{entry.current_song+1}/#{entry.show.songs.length}:"
-                      = entry.current_song_title
+          .entries
+            %table.table.table-striped.table-bordered.table-hover.table-condensed
+              %thead
+                %tr
+                  %th #
+                  %th show
+                  %th actions
+              %tbody
+                - @playlist.entries.each do |entry|
+                  %tr.entry[entry]{:"data-entry-id" => entry.id, :class => (entry.first? && @playlist.online?) ? 'success' : nil}
+                    %td.position= entry.position
+                    %td.title
+                      = entry.show.long_title
+                      - if entry.first?
+                        .current_song
+                          = "#{entry.current_song+1}/#{entry.show.songs.length}:"
+                          %strong= entry.current_song_title
+
+                      - unless entry.first?
+                        %span.muted
+                          &ndash;
+                          %small
+                            = surround('(',')') do
+                              last played:
+                              = entry.show.last_played_at
+                    %td.controls
+                      %a.btn.btn-mini.to-top{href:"#", title:"move to the top"}
+                        %i.icon-arrow-up
+                      %a.btn.btn-mini.remove{href:'#', title:"remove"}
+                        %i.icon-remove
+
+        - if @shows_not_on_playlist.any?
+          %h2 Shows not on playlist
+          .shows
+            - @shows_not_on_playlist.each do |show|
+              %span.add.btn[show]{:"data-show-id" => show.id}
+                = show.short_title

@@ -1,13 +1,30 @@
 config:
-  hostname: stream.example.com
-  port: 8000
-  password: changeme
-  bitrate: 128
-  description: Rock music, all week long!
-  genre: Rock
-  name: Rock Radio
-  url: http://www.example.com
   playlist: Default
+
+  shoutcast:
+    hostname: stream.example.com
+    port: 8000
+    password: changeme
+    bitrate: 128
+    format: MP3
+    protocol: ICY
+    description: Rock music, all week long!
+    genre: Rock
+    name: Rock Radio
+    url: http://www.example.com
+
+  icecast:
+    hostname: stream.example.com
+    port: 9000
+    mount: "/stream"
+    password: changeme
+    bitrate: 128
+    format: VORBIS
+    protocol: HTTP
+    description: Rust Radio
+    genre: Rock
+    name: Rust Radio
+    url: http://www.rustradio.org
 
   database:
     username: radio
@@ -22,3 +39,12 @@ config:
     oauth_token_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     disabled: false
 
+  facebook:
+    access_token: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    disabled: true
+
+  tune_in:
+    station_id: "s000000"
+    partner_id: "xxxxxxxx"
+    partner_key: "xxxxxxxxxxxx"
+    disabled: false

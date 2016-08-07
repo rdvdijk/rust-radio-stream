@@ -1,31 +1,29 @@
 require 'flacinfo'
 
-class RustRadio::Song
-  include DataMapper::Resource
-  storage_names[:default] = 'songs'
+module RustRadio
+  class Song < ActiveRecord::Base
 
-  belongs_to :show
+    belongs_to :show
 
-  property :id,         Serial
-  property :file_path,  String,  required: true
-  property :title,      String,  required: true
-  property :length,     Integer, required: true
+    validates_uniqueness_of :sort_order, :scope => :show_id
 
-  property :sort_order, Integer, required: true #, unique: [:show_id, :sort_order]
-  property :created_at, DateTime
-  property :updated_at, DateTime
+    def full_file_path
+      File.join(show.folder_path, file_path)
+    end
 
-  validates_uniqueness_of :sort_order, :scope => :show_id
+    def stream_title
+      song_info = info
+      "#{song_info[:title]} (#{song_info[:album]})"
+    end
 
-  def full_file_path
-    File.join(show.folder_path, file_path)
-  end
+    def info
+      flac = FlacInfo.new(full_file_path)
+      {
+        title: flac.tags["TITLE"],
+        artist: flac.tags["ARTIST"],
+        album: flac.tags["ALBUM"]
+      }
+    end
 
-  def stream_title
-    flac = FlacInfo.new(full_file_path)
-    title  = flac.tags["TITLE"]
-    album = flac.tags["ALBUM"]
-
-    "#{title} (#{album})"
   end
 end

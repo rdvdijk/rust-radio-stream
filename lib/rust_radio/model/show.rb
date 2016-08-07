@@ -1,34 +1,20 @@
-class RustRadio::Show
-  include DataMapper::Resource
-  storage_names[:default] = 'shows'
+module RustRadio
+  class Show < ActiveRecord::Base
 
-  has n, :songs, :order => [ :sort_order.asc ]
+    has_many :songs, :order => "sort_order"
 
-  property :id,           Serial
-  property :folder_path,  String, length: 255, unique: true
-  property :artist,       String
-  property :date,         Date
-  property :title,        String
-  property :info_file,    Text
-  property :setlist_identifier,   String
+    validates_uniqueness_of :folder_path
 
-  property :last_played_at, DateTime
-  property :created_at,     DateTime
-  property :updated_at,     DateTime
+    def get(index)
+      songs[index]
+    end
 
-  def length
-    songs.sum(:length)
-  end
+    def short_title
+      "#{city_state.match(/^([^,]*)/)} #{date.year}"
+    end
 
-  def get(index)
-    songs[index]
-  end
-
-  def short_title
-    "#{title.match(/^([^,]*)/)} #{date.year}"
-  end
-
-  def long_title
-    "#{artist} @ #{title}. #{date}"
+    def long_title
+      "#{date} #{artist} @ #{city_state}"
+    end
   end
 end

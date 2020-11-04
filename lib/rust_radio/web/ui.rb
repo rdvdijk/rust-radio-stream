@@ -14,7 +14,7 @@ module RustRadio
       end
 
       get "/" do
-        @playlist = Playlist.where(:name => "Default").first
+        @playlist = Playlist.where(name: "Default").first
         playlist_show_ids = @playlist.entries.map(&:show_id)
 
         @shows_not_on_playlist = Show.all.reject do |show|
@@ -51,7 +51,7 @@ module RustRadio
       end
 
       post "/add/:show_id" do |show_id|
-        playlist = Playlist.where(:name => "Default").first
+        playlist = Playlist.where(name: "Default").first
         show = Show.find(show_id)
 
         playlist.entries.create(show: show)

@@ -22,9 +22,9 @@ module RustRadio
 
     def sound_info
       @sound_info ||= RubyAudio::SoundInfo.new(
-        :channels => 2,
-        :samplerate => 44100,
-        :format => RubyAudio::FORMAT_OGG|RubyAudio::FORMAT_VORBIS
+        channels: 2,
+        samplerate: 44100,
+        format: RubyAudio::FORMAT_OGG|RubyAudio::FORMAT_VORBIS
       )
     end
   end

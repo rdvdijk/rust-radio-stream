@@ -10,7 +10,7 @@ module RustRadio
 
     def post(message)
       Thread.new do
-        @page.feed!(:message => message)
+        @page.feed!(message: message)
       end unless @disabled
     end
 

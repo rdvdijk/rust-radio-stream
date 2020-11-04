@@ -11,7 +11,7 @@ module RustRadio
     # Update in a new thread, to prevent blocking the streaming of data.
     def tune_in(title, artist, album)
       Thread.new do
-         conn = Faraday.new(:url => 'http://air.radiotime.com') do |faraday|
+         conn = Faraday.new(url: 'http://air.radiotime.com') do |faraday|
            faraday.adapter Faraday.default_adapter
          end
          conn.get "/Playing.ashx",

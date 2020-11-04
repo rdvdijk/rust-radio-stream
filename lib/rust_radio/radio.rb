@@ -37,7 +37,7 @@ module RustRadio
 
     def initialize_playlist
       playlist_name = @config["playlist"]
-      @playlist = Playlist.where(:name => playlist_name).first
+      @playlist = Playlist.where(name: playlist_name).first
       raise "Can't find playlist '#{playlist_name}'" unless @playlist
     end
 

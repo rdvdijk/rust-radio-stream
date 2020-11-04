@@ -1,8 +1,8 @@
 module RustRadio
   class Playlist < ActiveRecord::Base
 
-    has_many :entries, -> { order("position ASC") }, :class_name => "PlaylistEntry"
-    has_many :shows, :through => :entries
+    has_many :entries, -> { order("position ASC") }, class_name: "PlaylistEntry"
+    has_many :shows, through: :entries
 
     def play
       online!

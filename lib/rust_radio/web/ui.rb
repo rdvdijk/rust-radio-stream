@@ -1,6 +1,6 @@
 require 'sinatra/base'
 require 'haml'
-require 'sass'
+require 'sassc'
 
 module RustRadio
   module Web
@@ -25,7 +25,7 @@ module RustRadio
       end
 
       get "/stylesheet.css" do
-        sass :stylesheet
+        scss :stylesheet
       end
 
       get "/favicon.ico" do

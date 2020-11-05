@@ -38,3 +38,6 @@ set :keep_releases, 10
 
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
+
+# Set Ruby version to use during deployment:
+set :chruby_ruby, 'ruby-2.7.1'

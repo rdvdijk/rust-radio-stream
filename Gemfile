@@ -22,4 +22,5 @@ gem "fb_graph2"
 
 group :development do
   gem "pry-nav"
+  gem "capistrano", "~> 3.14", require: false
 end

@@ -1,3 +1,4 @@
 config.yml*
 *.flac
 .sass-cache
+log/capistrano.log

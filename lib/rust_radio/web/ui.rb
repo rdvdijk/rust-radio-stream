@@ -9,6 +9,11 @@ module RustRadio
       set :views,         File.expand_path("../../../../views", __FILE__)
       set :public_folder, File.expand_path("../../../../public", __FILE__)
 
+      if production?
+        require 'rack/ssl-enforcer'
+        use Rack::SslEnforcer
+      end
+
       after do
         ActiveRecord::Base.connection.close
       end

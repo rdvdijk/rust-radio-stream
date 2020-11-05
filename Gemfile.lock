@@ -102,6 +102,7 @@ GEM
       rack (>= 2.1.0)
     rack-protection (2.1.0)
       rack
+    rack-ssl-enforcer (0.2.9)
     rake (13.0.1)
     ruby-audio (1.6.1)
     ruby-shout (2.2.2)
@@ -155,6 +156,7 @@ DEPENDENCIES
   pg
   pry-nav
   puma
+  rack-ssl-enforcer
   ruby-audio
   ruby-shout
   sassc

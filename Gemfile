@@ -16,6 +16,7 @@ gem "puma"
 gem "sinatra"
 gem "haml"
 gem "sassc"
+gem "rack-ssl-enforcer"
 
 gem "twitter"
 gem "fb_graph2"

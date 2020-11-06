@@ -23,6 +23,7 @@ set :branch, ENV['BRANCH'] if ENV['BRANCH']
 
 # Default value for :linked_files is []
 append :linked_files, "config/config.yml"
+append :linked_files, "config/puma/#{fetch(:stage)}.rb"
 
 # Default value for linked_dirs is []
 # append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "public/system"

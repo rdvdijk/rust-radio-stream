@@ -16,10 +16,13 @@ gem "puma"
 gem "sinatra"
 gem "haml"
 gem "sassc"
-gem "rack-ssl-enforcer"
 
 gem "twitter"
 gem "fb_graph2"
+
+group :staging, :production do
+  gem "rack-ssl-enforcer"
+end
 
 group :development do
   gem "pry-nav"

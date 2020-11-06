@@ -5,7 +5,7 @@ module RustRadio
 
     belongs_to :show
 
-    validates_uniqueness_of :sort_order, :scope => :show_id
+    validates_uniqueness_of :sort_order, scope: :show_id
 
     def full_file_path
       File.join(show.folder_path, file_path)

@@ -12,6 +12,33 @@ and encodes to MP3 using [icanhasaudio](https://github.com/tenderlove/icanhasaud
 
 Note that some of these libs have been forked for minor tweaks.
 
+USAGE
+-----
+
+Add a show to the database:
+
+```sh
+$ bundle exec bin/rustradio add_show /path/to/liveshow.flac16
+```
+
+Start the stream:
+
+```
+$ bundle exec bin/rustradio play
+```
+
+Start the web console:
+
+```
+$ bundle exec bin/rustradio web
+```
+
+The web console can also be started using puma:
+
+```
+$ bundle exec puma
+```
+
 REQUIREMENTS
 ------------
 

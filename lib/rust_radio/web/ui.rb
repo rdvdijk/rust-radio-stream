@@ -1,6 +1,6 @@
 require 'sinatra/base'
 require 'haml'
-require 'sass'
+require 'sassc'
 
 module RustRadio
   module Web
@@ -9,12 +9,17 @@ module RustRadio
       set :views,         File.expand_path("../../../../views", __FILE__)
       set :public_folder, File.expand_path("../../../../public", __FILE__)
 
+      if production? || environment == :staging
+        require 'rack/ssl-enforcer'
+        use Rack::SslEnforcer
+      end
+
       after do
         ActiveRecord::Base.connection.close
       end
 
       get "/" do
-        @playlist = Playlist.where(:name => "Default").first
+        @playlist = Playlist.where(name: "Default").first
         playlist_show_ids = @playlist.entries.map(&:show_id)
 
         @shows_not_on_playlist = Show.all.reject do |show|
@@ -25,7 +30,7 @@ module RustRadio
       end
 
       get "/stylesheet.css" do
-        sass :stylesheet
+        scss :stylesheet
       end
 
       get "/favicon.ico" do
@@ -51,7 +56,7 @@ module RustRadio
       end
 
       post "/add/:show_id" do |show_id|
-        playlist = Playlist.where(:name => "Default").first
+        playlist = Playlist.where(name: "Default").first
         show = Show.find(show_id)
 
         playlist.entries.create(show: show)

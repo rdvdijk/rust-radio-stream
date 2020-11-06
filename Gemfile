@@ -1,24 +1,30 @@
 source "https://rubygems.org"
-gem "ruby-shout", "2.2.2", :git => "git@github.com:niko/ruby-shout.git"
+gem "ruby-shout"
 gem "ruby-audio"
-gem "icanhasaudio", "0.1.3", :git => "git@github.com:rdvdijk/icanhasaudio.git"
+gem "icanhasaudio", "0.1.3", git: "git@github.com:rdvdijk/icanhasaudio.git" # needed because of invalid gemspec
 gem "flacinfo-rb"
+gem "json"
 
-gem 'activerecord', "3.2.22.2"
+gem 'activerecord'
+#gem 'activesupport'
 gem 'pg'
-gem 'acts_as_list', "0.7.4", require: false
+gem 'acts_as_list', require: false
 
 gem "thor"
 
-gem "puma", "1.6.3"
+gem "puma"
 gem "sinatra"
 gem "haml"
-gem "sass"
+gem "sassc"
 
-gem "twitter", ">= 5.16.0"
-gem "fb_graph2", "0.7.7"
-gem "httpclient"
+gem "twitter"
+gem "fb_graph2"
 
-gem "rack-oauth2", "1.3.1"
+group :staging, :production do
+  gem "rack-ssl-enforcer"
+end
 
-gem "pry-nav"
+group :development do
+  gem "pry-nav"
+  gem "capistrano", "~> 3.14", require: false
+end

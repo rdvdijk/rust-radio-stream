@@ -6,6 +6,7 @@ config:
     servers:
     - hostname: stream.example.com
       port: 8000
+      username: mp3streamer
       password: changeme
       bitrate: 128
       format: MP3
@@ -21,7 +22,8 @@ config:
     - hostname: stream.example.com
       port: 9000
       mount: "/stream.ogg"
-      password: changeme
+      username: vorbisstreamer
+      password: changeme2
       bitrate: 128
       format: VORBIS
       protocol: HTTP

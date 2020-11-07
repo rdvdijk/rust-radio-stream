@@ -16,6 +16,7 @@ module RustRadio
       # mount
       s.host        = mount["hostname"]
       s.port        = mount["port"]
+      s.username    = mount["username"]
       s.password    = mount["password"]
       s.protocol    = Shout.const_get(mount["protocol"])
       s.format      = Shout.const_get(mount["format"])

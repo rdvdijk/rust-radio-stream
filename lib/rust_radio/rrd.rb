@@ -2,8 +2,6 @@ require 'rrd'
 require 'faraday'
 require 'nokogiri'
 
-require 'pry'
-
 module RustRadio
   class RRD
 

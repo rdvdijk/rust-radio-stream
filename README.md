@@ -46,3 +46,12 @@ REQUIREMENTS
 - libsndfile1-dev
 - libshout3-dev
 
+Deployment
+----------
+
+Use SSH agent for deployments:
+
+```
+eval $(ssh-agent -s)
+ssh-add ~/.ssh/id_rsa
+```

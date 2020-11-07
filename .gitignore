@@ -6,3 +6,4 @@ config/puma/staging.rb
 config/puma/production.rb
 config/deploy/staging.rb
 config/deploy/production.rb
+*.rrd

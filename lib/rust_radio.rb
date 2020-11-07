@@ -27,6 +27,8 @@ module RustRadio
 
   require 'rust_radio/web/ui'
 
+  require 'rust_radio/rrd'
+
   require 'rust_radio/tweeter'
   require 'rust_radio/facebook_poster'
   require 'rust_radio/tune_in'

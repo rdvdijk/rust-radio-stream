@@ -28,5 +28,11 @@ module RustRadio
     def web
       RustRadio::Web::UI.run!
     end
+
+    desc "rrd", "Update RRD statistisc"
+    method_option :config_file, type: :string, default: "config/config.yml"
+    def rrd
+      RustRadio::RRD.new(options["config_file"]).update!
+    end
   end
 end

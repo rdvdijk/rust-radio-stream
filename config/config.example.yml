@@ -33,6 +33,17 @@ config:
       url: http://www.rustradio.org
       send_metadata: true
 
+  icecast:
+    protocol: http
+    hostname: stream.example.com
+    port: 9000
+    admin:
+      username: admin
+      password: changme
+
+  rrd:
+    path: /path/to/rrd/file.rrd
+
   database:
     username: radio
     password: changeme

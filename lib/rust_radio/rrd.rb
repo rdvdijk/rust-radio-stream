@@ -12,7 +12,7 @@ module RustRadio
 
     def update!
       if @rrd.update(Time.now, listener_count)
-        puts "updated listener count: #{listener_count}"
+        #puts "updated listener count: #{listener_count}"
       else
         puts @rrd.error
         puts "error updating..."

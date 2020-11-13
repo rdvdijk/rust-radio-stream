@@ -42,3 +42,17 @@ set :keep_releases, 10
 
 # Set Ruby version to use during deployment:
 set :chruby_ruby, 'ruby-2.7.1'
+
+namespace :deploy do
+
+  desc 'Restart services'
+  task :restart do
+    on roles(:app), in: :sequence, wait: 5 do
+      execute :sudo, :service, "rust-radio-console", :restart
+      execute :sudo, :service, "rust-radio-stream", :restart
+    end
+  end
+
+  after :publishing, :restart
+
+end

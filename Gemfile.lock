@@ -26,7 +26,7 @@ GEM
     airbrussh (1.4.0)
       sshkit (>= 1.6.1, != 1.7.0)
     attr_required (1.0.1)
-    bindata (2.4.8)
+    bindata (2.4.10)
     buftok (0.2.0)
     capistrano (3.14.1)
       airbrussh (>= 1.0.0)

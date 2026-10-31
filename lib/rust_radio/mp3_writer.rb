@@ -15,23 +15,11 @@ module RustRadio
 
     # Convert the given samples to MP3 data and stream it.
     def stream_mp3(buffer)
-      in_buffer = buffer_to_io(buffer)
-
-      @encoder.encode(in_buffer) do |data|
-        shout(data)
-      end
-    end
-
-    private
-
-    def buffer_to_io(buffer)
       samples = buffer_to_samples(buffer)
 
-      in_buffer = StringIO.new
-      in_buffer.write(samples.pack("v*"))
-      in_buffer.seek(0)
-
-      in_buffer
+      @encoder.encode(samples) do |data|
+        shout(data)
+      end
     end
 
     def buffer_to_samples(buffer)

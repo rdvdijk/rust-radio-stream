@@ -34,7 +34,7 @@ module RustRadio
         log "Connecting."
         @shout.connect
         log "Connected."
-      rescue Shout::SocketError, Shout::ConnectionError => error
+      rescue Shout::SocketIOError, Shout::ConnectionError => error
         log "Error connecting: #{error}"
         log "Sleeping for #{RECONNECT_SLEEP}s."
         sleep RECONNECT_SLEEP
@@ -54,8 +54,8 @@ module RustRadio
     # Send data, and try to reconnect if something goes wrong.
     def send(data)
       begin
-        @shout.send(data)
-      rescue ShoutError => error
+        @shout.send_data(data)
+      rescue Shout::ShoutError => error
         log "Error sending data: #{error}"
         disconnect # shout doesn't know it has already been disconnected.. (?)
         connect
@@ -84,7 +84,7 @@ module RustRadio
     private
 
     def resend_metadata
-      @shout.metadata = @metadata
+      @shout.metadata = @metadata if @metadata
     end
 
     def log(message)

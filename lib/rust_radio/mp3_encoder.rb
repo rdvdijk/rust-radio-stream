@@ -11,9 +11,8 @@ module RustRadio
       @encoder = encoder
     end
 
-    def encode(in_buffer, &block)
-      #input = buffer_to_samples(in_buffer).flatten.map(&:to_i)
-      @encoder.encode_interleaved_short(in_buffer, &block)
+    def encode(samples, &block)
+      @encoder.encode_interleaved_short(samples, &block)
     end
 
     def flush(&block)

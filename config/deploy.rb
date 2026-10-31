@@ -1,5 +1,5 @@
 # config valid for current version and patch releases of Capistrano
-lock "~> 3.14.1"
+lock "~> 3.20.1"
 
 set :application, "rust-radio-console"
 set :repo_url, "git@github.com:rdvdijk/rust_radio_stream.git"
@@ -41,7 +41,12 @@ set :keep_releases, 10
 # set :ssh_options, verify_host_key: :secure
 
 # Set Ruby version to use during deployment:
-set :chruby_ruby, 'ruby-2.7.1'
+set :chruby_ruby, 'ruby-3.4.12'
+
+# Set environment variable, fixing ruby-shout compilation errors
+set :bundle_env_variables, fetch(:bundle_env_variables, {}).merge(
+  "BUNDLE_BUILD__RUBY_SHOUT" => "--with-cflags=-Wno-error=int-conversion"
+)
 
 namespace :deploy do
 

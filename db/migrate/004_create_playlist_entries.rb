@@ -1,4 +1,4 @@
-class CreatePlaylistEntries < ActiveRecord::Migration
+class CreatePlaylistEntries < ActiveRecord::Migration[8.1]
 
   def change
     create_table :playlist_entries do |t|

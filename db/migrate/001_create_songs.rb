@@ -1,4 +1,4 @@
-class CreateSongs < ActiveRecord::Migration
+class CreateSongs < ActiveRecord::Migration[8.1]
 
   def change
     create_table :songs do |t|

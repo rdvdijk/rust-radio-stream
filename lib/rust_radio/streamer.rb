@@ -5,25 +5,26 @@ module RustRadio
 
   class Streamer
     def initialize(general, mount)
-      s             = Shout.new
+      @shout = Shout::Connection.new do |conn|
+        conn.configuration.host = mount["hostname"]
+        conn.configuration.port = mount["port"]
+        conn.configuration.mount = mount["mount"] if mount["mount"]
+        conn.configuration.user = mount["username"]
+        conn.configuration.password = mount["password"]
+        conn.configuration.protocol = mount["protocol"].to_sym
+        conn.configuration.format = mount["format"].intern
 
-      # general
-      s.description = general["description"]
-      s.genre       = general["genre"]
-      s.name        = general["name"]
-      s.url         = general["url"]
+        # Audio information
+        conn.configuration.audio_info.bitrate = mount["bitrate"]
+        #conn.configuration.audio_info.samplerate = 44100
+        #conn.configuration.audio_info.channels = 2
 
-      # mount
-      s.host        = mount["hostname"]
-      s.port        = mount["port"]
-      s.username    = mount["username"]
-      s.password    = mount["password"]
-      s.protocol    = Shout.const_get(mount["protocol"])
-      s.format      = Shout.const_get(mount["format"])
-      s.bitrate     = mount["bitrate"].to_s
-      s.mount       = mount["mount"] if mount["mount"]
-
-      @shout = s
+        # Stream metadata
+        conn.configuration.meta.name = general["name"]
+        conn.configuration.meta.genre = general["genre"]
+        conn.configuration.meta.description = general["description"]
+        conn.configuration.meta.url = general["url"]
+      end
       @send_metadata = mount["send_metadata"]
     end
 
@@ -33,29 +34,27 @@ module RustRadio
         log "Connecting."
         @shout.connect
         log "Connected."
-      rescue ShoutError => error
+      rescue Shout::SocketError, Shout::ConnectionError => error
         log "Error connecting: #{error}"
-        case error.message
-        when /^#{ShoutError::SOCKET}/, /^#{ShoutError::NOCONNECT}/
-          log "Sleeping for #{RECONNECT_SLEEP}s."
-          sleep RECONNECT_SLEEP
-          log "Reconnecting."
-          retry
-        else
-          raise error
-        end
+        log "Sleeping for #{RECONNECT_SLEEP}s."
+        sleep RECONNECT_SLEEP
+        log "Reconnecting."
+        retry
+      rescue Shout::ShoutError => error
+        log "Error connecting: #{error}"
+        raise error
       end
     end
 
     def disconnect
       log "Disconnecting."
-      @shout.disconnect
+      @shout.disconnect if @shout.connected?
     end
 
     # Send data, and try to reconnect if something goes wrong.
     def send(data)
       begin
-        @shout.send data
+        @shout.send(data)
       rescue ShoutError => error
         log "Error sending data: #{error}"
         disconnect # shout doesn't know it has already been disconnected.. (?)
@@ -89,7 +88,7 @@ module RustRadio
     end
 
     def log(message)
-      puts "[#{@shout.name}@#{@shout.host}:#{@shout.port}#{@shout.mount}] #{message}"
+      puts "[#{@shout.configuration.name}@#{@shout.configuration.host}:#{@shout.configuration.port}#{@shout.configuration.mount}] #{message}"
     end
   end
 end

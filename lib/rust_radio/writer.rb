@@ -46,8 +46,8 @@ module RustRadio
     end
 
     def update_metadata(song)
-      metadata = ShoutMetadata.new
-      metadata.add "song", song.stream_title
+      metadata = Shout::Metadata.new
+      metadata.add("song", song.stream_title)
 
       @streamers.each do |streamer|
         streamer.metadata = metadata

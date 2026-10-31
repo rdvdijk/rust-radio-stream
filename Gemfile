@@ -1,8 +1,8 @@
 source 'https://rubygems.org'
-gem 'ruby-shout'
+gem 'ffi-shout', path: '/home/roel/code/shout-ruby-ffi'
 gem 'ruby-audio'
-gem 'icanhasaudio', '0.1.3', git: 'git@github.com:rdvdijk/icanhasaudio.git' # needed because of invalid gemspec
-gem 'flacinfo-rb'
+gem 'lame'
+gem 'flacinfo-rb', "1.0" # 1.1.0 has debugging output
 gem 'json'
 
 gem 'activerecord'

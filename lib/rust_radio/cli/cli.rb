@@ -6,7 +6,7 @@ module RustRadio
     desc "add_show [PATH]", "Add a show to the default playlist."
     method_option :playlist, type: :string, default: "Default"
     def add_show(path)
-      raise Thor::MalformattedArgumentError.new("#{path} does not exist.") unless File.exists?(path)
+      raise Thor::MalformattedArgumentError.new("#{path} does not exist.") unless File.exist?(path)
       raise Thor::MalformattedArgumentError.new("#{path} is not a directory.") unless File.directory?(path)
       puts "Adding folder: #{path}"
       RustRadio::ShowAdder.new.add(path, options["playlist"])

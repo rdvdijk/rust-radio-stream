@@ -3,6 +3,7 @@
 require 'twitter'
 
 module RustRadio
+  # Updates Twitter/X
   class Tweeter
     def initialize(config)
       @twitter = Twitter::REST::Client.new do |twitter_config|

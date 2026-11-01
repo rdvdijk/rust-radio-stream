@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Updates TuneIn status
   class TuneIn
     def initialize(config)
       @disabled = config['disabled']

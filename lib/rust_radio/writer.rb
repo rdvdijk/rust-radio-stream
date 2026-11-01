@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Base class for writers, implementers should call `shout(data)` to stream audio
   class Writer
     def initialize(config, type)
       # Shout streamers

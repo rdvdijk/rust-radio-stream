@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Main Rust Radio module
 module RustRadio
   require 'rust_radio/db'
 

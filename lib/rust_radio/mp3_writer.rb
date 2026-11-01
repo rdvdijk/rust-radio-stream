@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Writes MP3 audio
   class MP3Writer < Writer
     def initialize(config)
       super(config, 'mp3')

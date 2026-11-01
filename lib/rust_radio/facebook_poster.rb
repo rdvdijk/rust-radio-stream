@@ -3,6 +3,7 @@
 require 'fb_graph2'
 
 module RustRadio
+  # Posts to Facebook every time a new show starts
   class FacebookPoster
     def initialize(config)
       @disabled = config['disabled']

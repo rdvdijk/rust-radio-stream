@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Playlist class, contains the main show playing loop
   class Playlist < ActiveRecord::Base
     has_many :entries, -> { order('position ASC') }, class_name: 'PlaylistEntry'
     has_many :shows, through: :entries

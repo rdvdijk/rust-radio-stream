@@ -3,6 +3,7 @@
 require 'acts_as_list'
 
 module RustRadio
+  # An entry in the playlist
   class PlaylistEntry < ActiveRecord::Base
     acts_as_list scope: :playlist
 

@@ -8,7 +8,7 @@ require 'bundler'
 
 Bundler.setup
 
-$:.unshift(File.join(File.dirname(__FILE__), 'lib'))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
 require 'rust_radio'
 
 config = YAML.load_file('config/config.yml')['config']

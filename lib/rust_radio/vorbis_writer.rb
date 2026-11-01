@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Writes OGG/Vorbis audio
   class VorbisWriter < Writer
     def initialize(config)
       super(config, 'vorbis')

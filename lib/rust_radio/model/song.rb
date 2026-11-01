@@ -3,6 +3,7 @@
 require 'flacinfo'
 
 module RustRadio
+  # A song, part of a show
   class Song < ActiveRecord::Base
     belongs_to :show
 

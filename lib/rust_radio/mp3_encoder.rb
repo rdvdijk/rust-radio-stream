@@ -3,6 +3,7 @@
 require 'lame'
 
 module RustRadio
+  # Encodes audio to MP3
   class MP3Encoder
     def initialize(config)
       encoder = LAME::Encoder.new

@@ -5,6 +5,7 @@ require 'shout'
 module RustRadio
   RECONNECT_SLEEP = 1.0
 
+  # Connects to an Icecast server, streams audio to it, and updates metadata
   class Streamer
     def initialize(general, mount)
       @shout = Shout::Connection.new do |conn|

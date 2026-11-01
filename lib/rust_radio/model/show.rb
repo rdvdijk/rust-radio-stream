@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # A show that can be played on the radio
   class Show < ActiveRecord::Base
     has_many :songs, -> { order('sort_order ASC') }
 

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Drag-drop module used in the playlist UI
   module DragDrop
     # Move to top if offline, move to second place if online.
     def move_to_top

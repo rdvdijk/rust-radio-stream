@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Create playlists table
 class CreatePlaylists < ActiveRecord::Migration[8.1]
   def change
     create_table :playlists do |t|

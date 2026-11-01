@@ -3,6 +3,7 @@
 require 'flacinfo'
 
 module RustRadio
+  # Used to add FLAC shows to the database
   class ShowAdder
     def add(folder_path, playlist_name)
       @folder_path = folder_path

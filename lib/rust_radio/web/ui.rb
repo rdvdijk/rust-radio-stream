@@ -6,6 +6,7 @@ require 'sassc'
 
 module RustRadio
   module Web
+    # Main user interface class for playlist management
     class UI < Sinatra::Base
       set :logging, false # doesn't do anything?
       set :views,         File.expand_path('../../../views', __dir__)

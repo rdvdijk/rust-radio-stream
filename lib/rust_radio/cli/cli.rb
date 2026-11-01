@@ -3,6 +3,7 @@
 require 'thor'
 
 module RustRadio
+  # Command line interface stuff
   class CLI < Thor
     desc 'add_show [PATH]', 'Add a show to the default playlist.'
     method_option :playlist, type: :string, default: 'Default'

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # The main radio class, intializes the playlist and posts to social media
   class Radio
     def initialize(config_file)
       @config = YAML.load_file(config_file)['config']

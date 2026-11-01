@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Encodes audio to OGG/Vorbis
   class VorbisEncoder
     def initialize(_config)
       @io = StringIO.new

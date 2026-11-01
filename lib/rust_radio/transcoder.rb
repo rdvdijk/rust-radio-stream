@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module RustRadio
+  # Transcodes audio from a reader to multiple writers
   class Transcoder
     def initialize(reader, writers)
       @reader  = reader

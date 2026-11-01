@@ -8,7 +8,7 @@ module RustRadio
     end
 
     def encode(in_buffer, &block)
-      @io.string = '' # reset output buffer
+      @io.string = +'' # reset output buffer
 
       @sound.write(in_buffer)
 

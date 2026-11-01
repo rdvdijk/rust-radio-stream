@@ -6,7 +6,7 @@ module RustRadio
     def move_to_top
       return if first?
 
-      if playlist.online? and !first?
+      if playlist.online? && !first?
         insert_at(2)
       else
         playlist.first.reset!

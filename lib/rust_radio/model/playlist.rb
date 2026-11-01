@@ -7,7 +7,7 @@ module RustRadio
 
     def play
       online!
-      while true
+      loop do
         entry = first
         entry.mark_start_of_song!
         yield entry.song_to_play

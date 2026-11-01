@@ -30,7 +30,7 @@ module RustRadio
     end
 
     def starting?
-      current_song == 0
+      current_song.zero?
     end
 
     def mark_start_of_song!

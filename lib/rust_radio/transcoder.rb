@@ -27,9 +27,7 @@ module RustRadio
     end
 
     def close
-      @writers.each do |writer|
-        writer.close
-      end
+      @writers.each(&:close)
     end
 
     private

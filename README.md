@@ -4,13 +4,11 @@ Rust Radio Ruby Runner
 This is an all-Ruby replacement of the previous ices0 with Perl module 
 version of [Rust Radio](http://www.rustradio.org).
 
-It uses [ruby-shout](https://github.com/niko/ruby-shout) to stream to 
-a [SHOUTcast](http://www.shoutcast.com/) server and [Icecast](http://icecast.org/) server.
+It uses [ffi-shout](https://github.com/rdvdijk/ffi-shout) to stream to a
+[Icecast](http://icecast.org/) server.
 
 It reads FLAC files and encodes to Vorbis using [ruby-audio](https://github.com/warhammerkid/ruby-audio)
 and encodes to MP3 using [lame](https://github.com/rdvdijk/lame).
-
-Note that some of these libs have been forked for minor tweaks.
 
 USAGE
 -----
@@ -42,9 +40,9 @@ $ bundle exec puma
 REQUIREMENTS
 ------------
 
-- libmp3lame-dev
-- libsndfile1-dev
-- libshout3-dev
+- `libmp3lame-dev`
+- `libsndfile1-dev`
+- `libshout3-dev`
 
 Deployment
 ----------

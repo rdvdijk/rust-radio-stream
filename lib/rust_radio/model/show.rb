@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module RustRadio
   class Show < ActiveRecord::Base
     has_many :songs, -> { order('sort_order ASC') }

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module RustRadio
   module DragDrop
     # Move to top if offline, move to second place if online.

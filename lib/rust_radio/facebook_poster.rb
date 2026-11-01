@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'fb_graph2'
 
 module RustRadio

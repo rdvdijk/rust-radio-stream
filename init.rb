@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # Defaults to UTC, but Rails app runs in CEST..
 ENV['TZ'] = 'CEST'
 

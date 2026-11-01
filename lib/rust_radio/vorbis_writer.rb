@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module RustRadio
   class VorbisWriter < Writer
     def initialize(config)

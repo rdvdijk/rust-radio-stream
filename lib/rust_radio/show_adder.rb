@@ -17,7 +17,7 @@ module RustRadio
           update_show_length
           add_to_playlist
         end
-      rescue Exception => e
+      rescue StandardError => e
         puts "ERROR: #{e}"
       end
     end
@@ -33,25 +33,7 @@ module RustRadio
     end
 
     def create_show
-      file = File.open(File.join(@folder_path, @info_file))
-      lines = file.readlines.map(&:chomp)
-      content = lines.join('\n')
-
-      artist      = lines[0]
-      date        = lines[1]
-      venue       = lines[2]
-      city_state  = lines[3]
-      festival    = lines[4]
-
-      # Create show:
-      @show = Show.new(folder_path: @folder_path,
-                       artist: artist,
-                       date: Date.parse(date),
-                       city_state: city_state,
-                       venue: venue,
-                       festival: festival,
-                       info_file: content,
-                       setlist_identifier: "#{date.gsub(/[^\d]/, '')}0")
+      @show = Show.new(show_attributes)
 
       unless @show.valid?
         puts "Could not add show: #{@show.errors.full_messages.join(',')}"
@@ -62,24 +44,37 @@ module RustRadio
       @show.save!
     end
 
+    def show_attributes
+      lines = File.readlines(File.join(@folder_path, @info_file), chomp: true)
+      artist, date, venue, city_state, festival = lines
+
+      { folder_path: @folder_path,
+        artist: artist,
+        date: Date.parse(date),
+        city_state: city_state,
+        venue: venue,
+        festival: festival,
+        info_file: lines.join('\n'),
+        setlist_identifier: "#{date.gsub(/[^\d]/, '')}0" }
+    end
+
     def add_songs
       @flac_files.sort.each_with_index do |flac, index|
-        info = FlacInfo.new(File.join(@folder_path, flac))
-
-        streaminfo = info.streaminfo
-        samplerate = streaminfo['samplerate']
-        raise "Incompatible sample rate (#{samplerate}) in #{flac}" unless samplerate == 44_100
-
-        length = (streaminfo['total_samples'] / samplerate.to_f) * 1000
-        title = info.tags['TITLE'] || raise("Tag 'TITLE' not set in #{flac}")
-
-        @show.songs.create(file_path: flac,
-                           title: title,
-                           length: length,
-                           sort_order: index + 1)
+        @show.songs.create(**song_attributes(flac), sort_order: index + 1)
         putc '.'
       end
       puts
+    end
+
+    def song_attributes(flac)
+      info = FlacInfo.new(File.join(@folder_path, flac))
+      streaminfo = info.streaminfo
+      samplerate = streaminfo['samplerate']
+      raise "Incompatible sample rate (#{samplerate}) in #{flac}" unless samplerate == 44_100
+
+      { file_path: flac,
+        title: info.tags['TITLE'] || raise("Tag 'TITLE' not set in #{flac}"),
+        length: (streaminfo['total_samples'] / samplerate.to_f) * 1000 }
     end
 
     def update_show_length

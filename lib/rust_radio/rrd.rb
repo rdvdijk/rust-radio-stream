@@ -52,10 +52,11 @@ module RustRadio
     end
 
     def get_xml_count(xml_host, username, password, xml_path, xpath)
-      conn = Faraday.new(url: xml_host)
-      conn.basic_auth(username, password)
-      response = conn.get(xml_path)
+      conn = Faraday.new(url: xml_host) do |f|
+        f.request :authorization, :basic, username, password
+      end
 
+      response = conn.get(xml_path)
       xml = response.body
       xml_doc = Nokogiri::XML(xml)
       xml_doc.xpath("#{xpath}/text()").to_s.to_i

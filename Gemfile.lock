@@ -141,6 +141,8 @@ GEM
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
     rack-ssl-enforcer (0.2.9)
+    rackup (2.3.1)
+      rack (>= 3)
     rainbow (3.1.1)
     rake (13.4.2)
     regexp_parser (2.13.1)
@@ -224,6 +226,7 @@ DEPENDENCIES
   pry-nav
   puma
   rack-ssl-enforcer
+  rackup
   rrd-ffi
   rubocop
   rubocop-performance

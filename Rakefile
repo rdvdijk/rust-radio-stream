@@ -28,9 +28,11 @@ namespace :sanity do
         puts "  Show ##{show.id} :: #{File.exist? show.folder_path} :: #{show.date} #{show.city_state} #{show.artist}"
 
         show.songs.each do |song|
-          puts "    Song #{song.id} :: #{song.full_file_path} #{File.exist? song.full_file_path} :: #{song.sort_order}. #{song.title} (#{song.length})"
+          exists = File.exist?(song.full_file_path)
+          puts "    Song #{song.id} :: #{song.full_file_path} #{exists} :: " \
+               "#{song.sort_order}. #{song.title} (#{song.length})"
 
-          raise "File not found: #{song.full_file_path}" unless File.exist?(song.full_file_path)
+          raise "File not found: #{song.full_file_path}" unless exists
         end
       end
     end

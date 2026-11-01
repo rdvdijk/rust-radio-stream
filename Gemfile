@@ -18,6 +18,7 @@ gem 'haml'
 gem 'puma'
 gem 'sassc'
 gem 'sinatra'
+gem 'rackup'
 
 gem 'fb_graph2'
 gem 'twitter'

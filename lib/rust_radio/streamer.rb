@@ -9,24 +9,9 @@ module RustRadio
   class Streamer
     def initialize(general, mount)
       @shout = Shout::Connection.new do |conn|
-        conn.configuration.host = mount['hostname']
-        conn.configuration.port = mount['port']
-        conn.configuration.mount = mount['mount'] if mount['mount']
-        conn.configuration.user = mount['username']
-        conn.configuration.password = mount['password']
-        conn.configuration.protocol = mount['protocol'].to_sym
-        conn.configuration.format = mount['format'].intern
-
-        # Audio information
-        conn.configuration.audio_info.bitrate = mount['bitrate']
-        # conn.configuration.audio_info.samplerate = 44100
-        # conn.configuration.audio_info.channels = 2
-
-        # Stream metadata
-        conn.configuration.meta.name = general['name']
-        conn.configuration.meta.genre = general['genre']
-        conn.configuration.meta.description = general['description']
-        conn.configuration.meta.url = general['url']
+        configure_connection(conn.configuration, mount)
+        configure_format(conn.configuration, mount)
+        configure_meta(conn.configuration.meta, general)
       end
       @send_metadata = mount['send_metadata']
     end
@@ -97,8 +82,34 @@ module RustRadio
       @metadata_pending = false
     end
 
+    def configure_connection(config, mount)
+      config.host = mount['hostname']
+      config.port = mount['port']
+      config.mount = mount['mount'] if mount['mount']
+      config.user = mount['username']
+      config.password = mount['password']
+    end
+
+    def configure_format(config, mount)
+      config.protocol = mount['protocol'].to_sym
+      config.format = mount['format'].intern
+      config.audio_info.bitrate = mount['bitrate']
+    end
+
+    def configure_meta(meta, general)
+      meta.name = general['name']
+      meta.genre = general['genre']
+      meta.description = general['description']
+      meta.url = general['url']
+    end
+
     def log(message)
-      puts "[#{@shout.configuration.name}@#{@shout.configuration.host}:#{@shout.configuration.port}#{@shout.configuration.mount}] #{message}"
+      puts "[#{log_prefix}] #{message}"
+    end
+
+    def log_prefix
+      config = @shout.configuration
+      "#{config.name}@#{config.host}:#{config.port}#{config.mount}"
     end
   end
 end

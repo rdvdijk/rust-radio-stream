@@ -1,5 +1,4 @@
 class CreateShows < ActiveRecord::Migration[8.1]
-
   def change
     create_table :shows do |t|
       t.string   :folder_path
@@ -14,5 +13,4 @@ class CreateShows < ActiveRecord::Migration[8.1]
       t.timestamps
     end
   end
-
 end

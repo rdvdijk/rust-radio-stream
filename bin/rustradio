@@ -3,4 +3,3 @@
 require_relative '../init'
 
 RustRadio::CLI.start
-

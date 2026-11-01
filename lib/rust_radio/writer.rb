@@ -1,11 +1,10 @@
 module RustRadio
   class Writer
-
     def initialize(config, type)
       # Shout streamers
       @streamers = []
 
-      config[type]["servers"].each do |mount|
+      config[type]['servers'].each do |mount|
         streamer = RustRadio::Streamer.new(config, mount)
         streamer.connect
         @streamers << streamer
@@ -47,12 +46,11 @@ module RustRadio
 
     def update_metadata(song)
       metadata = Shout::Metadata.new
-      metadata.add("song", song.stream_title)
+      metadata.add('song', song.stream_title)
 
       @streamers.each do |streamer|
         streamer.metadata = metadata
       end
     end
-
   end
 end

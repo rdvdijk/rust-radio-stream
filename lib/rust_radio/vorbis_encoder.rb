@@ -1,13 +1,12 @@
 module RustRadio
   class VorbisEncoder
-
-    def initialize(config)
+    def initialize(_config)
       @io = StringIO.new
       @sound = RubyAudio::Sound.open(@io, 'w', sound_info)
     end
 
     def encode(in_buffer, &block)
-      @io.string = "" # reset output buffer
+      @io.string = '' # reset output buffer
 
       @sound.write(in_buffer)
 
@@ -23,8 +22,8 @@ module RustRadio
     def sound_info
       @sound_info ||= RubyAudio::SoundInfo.new(
         channels: 2,
-        samplerate: 44100,
-        format: RubyAudio::FORMAT_OGG|RubyAudio::FORMAT_VORBIS
+        samplerate: 44_100,
+        format: RubyAudio::FORMAT_OGG | RubyAudio::FORMAT_VORBIS
       )
     end
   end

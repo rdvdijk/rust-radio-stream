@@ -1,6 +1,5 @@
 module RustRadio
   class Transcoder
-
     def initialize(reader, writers)
       @reader  = reader
       @writers = writers
@@ -34,7 +33,7 @@ module RustRadio
     private
 
     def set_synchronization_delay!
-      @synchronization_time = Time.now.to_f + shortest_delay/1000.0
+      @synchronization_time = Time.now.to_f + shortest_delay / 1000.0
     end
 
     def shortest_delay
@@ -48,6 +47,5 @@ module RustRadio
     def synchronize?
       Time.now.to_f >= @synchronization_time
     end
-
   end
 end

@@ -2,7 +2,6 @@ require 'acts_as_list'
 
 module RustRadio
   class PlaylistEntry < ActiveRecord::Base
-
     acts_as_list scope: :playlist
 
     belongs_to :playlist
@@ -23,7 +22,7 @@ module RustRadio
     end
 
     def next
-      next_index = (current_song+1) % show.songs.length
+      next_index = (current_song + 1) % show.songs.length
       self.current_song = next_index
       save!
     end

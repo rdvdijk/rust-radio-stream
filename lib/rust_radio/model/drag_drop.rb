@@ -2,13 +2,13 @@ module RustRadio
   module DragDrop
     # Move to top if offline, move to second place if online.
     def move_to_top
-      unless first?
-        if playlist.online? and !first?
-          insert_at(2)
-        else
-          playlist.first.reset!
-          super
-        end
+      return if first?
+
+      if playlist.online? and !first?
+        insert_at(2)
+      else
+        playlist.first.reset!
+        super
       end
     end
 
@@ -26,12 +26,10 @@ module RustRadio
           insert_at(new_position)
         end
       else
-        if first?
-          reset!
-        end
+        reset! if first?
         insert_at(new_position)
-        self.save
-        self.reload
+        save
+        reload
       end
     end
 

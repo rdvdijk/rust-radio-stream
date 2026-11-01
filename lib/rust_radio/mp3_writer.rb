@@ -1,8 +1,7 @@
 module RustRadio
   class MP3Writer < Writer
-
     def initialize(config)
-      super(config, "mp3")
+      super(config, 'mp3')
 
       @encoder = MP3Encoder.new(config)
     end
@@ -29,6 +28,5 @@ module RustRadio
       end
       samples
     end
-
   end
 end

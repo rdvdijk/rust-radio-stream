@@ -1,8 +1,11 @@
+# frozen_string_literal: true
+
+require 'rubocop/rake_task'
+
 namespace :db do
-  desc "Run ActiveRecord migrations."
+  desc 'Run ActiveRecord migrations.'
   task :migrate do #=> :environment do
     require './init'
-    #ActiveRecord::Migrator.migrate('db/migrate', ENV["VERSION"] ? ENV["VERSION"].to_i : nil )
     context = ActiveRecord::MigrationContext.new('db/migrate')
     if ENV['VERSION']
       context.migrate(ENV['VERSION'].to_i)
@@ -13,7 +16,7 @@ namespace :db do
 end
 
 namespace :sanity do
-  desc "Do a sanity check of all playlists, shows and songs."
+  desc 'Do a sanity check of all playlists, shows and songs.'
   task :check do
     require 'pry'
     require './init'
@@ -33,7 +36,7 @@ namespace :sanity do
     end
   end
 
-  desc "Do a dry-run of playing songs."
+  desc 'Do a dry-run of playing songs.'
   task :dryrun do
     require 'pry'
     require './init'
@@ -44,3 +47,7 @@ namespace :sanity do
     end
   end
 end
+
+RuboCop::RakeTask.new
+
+task default: %i[rubocop]

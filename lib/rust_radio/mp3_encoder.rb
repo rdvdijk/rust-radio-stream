@@ -5,7 +5,7 @@ module RustRadio
     def initialize(config)
       encoder = LAME::Encoder.new
       encoder.configure do |encoder_config|
-        encoder_config.bitrate = config["mp3"]["bitrate"]
+        encoder_config.bitrate = config['mp3']['bitrate']
         encoder_config.quality = 2
       end
       @encoder = encoder

@@ -2,7 +2,6 @@ require 'flacinfo'
 
 module RustRadio
   class Song < ActiveRecord::Base
-
     belongs_to :show
 
     validates_uniqueness_of :sort_order, scope: :show_id
@@ -19,11 +18,10 @@ module RustRadio
     def info
       flac = FlacInfo.new(full_file_path)
       {
-        title: flac.tags["TITLE"],
-        artist: flac.tags["ARTIST"],
-        album: flac.tags["ALBUM"]
+        title: flac.tags['TITLE'],
+        artist: flac.tags['ARTIST'],
+        album: flac.tags['ALBUM']
       }
     end
-
   end
 end

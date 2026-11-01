@@ -1,7 +1,6 @@
 module RustRadio
   class Show < ActiveRecord::Base
-
-    has_many :songs, -> { order("sort_order ASC") }
+    has_many :songs, -> { order('sort_order ASC') }
 
     validates_uniqueness_of :folder_path
 

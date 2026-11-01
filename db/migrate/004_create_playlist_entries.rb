@@ -1,5 +1,4 @@
 class CreatePlaylistEntries < ActiveRecord::Migration[8.1]
-
   def change
     create_table :playlist_entries do |t|
       t.integer :current_song, default: 0, null: false
@@ -9,5 +8,4 @@ class CreatePlaylistEntries < ActiveRecord::Migration[8.1]
       t.timestamps
     end
   end
-
 end

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 source 'https://rubygems.org'
 gem 'ffi-shout', '0.1.0'
 gem 'flacinfo-rb', '1.0' # 1.1.0 has debugging output

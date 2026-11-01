@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module RustRadio
   class Radio
     def initialize(config_file)

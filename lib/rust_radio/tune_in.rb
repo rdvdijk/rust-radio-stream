@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module RustRadio
   class TuneIn
     def initialize(config)

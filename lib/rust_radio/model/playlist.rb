@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module RustRadio
   class Playlist < ActiveRecord::Base
     has_many :entries, -> { order('position ASC') }, class_name: 'PlaylistEntry'

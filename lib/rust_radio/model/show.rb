@@ -1,7 +1,9 @@
-module RustRadio
-  class Show < ActiveRecord::Base
+# frozen_string_literal: true
 
-    has_many :songs, -> { order("sort_order ASC") }
+module RustRadio
+  # A show that can be played on the radio
+  class Show < ActiveRecord::Base
+    has_many :songs, -> { order('sort_order ASC') }
 
     validates_uniqueness_of :folder_path
 

@@ -1,21 +1,25 @@
-require 'icanhasaudio'
+# frozen_string_literal: true
+
+require 'lame'
 
 module RustRadio
+  # Encodes audio to MP3
   class MP3Encoder
     def initialize(config)
-      encoder = Audio::MPEG::Encoder.new
-      encoder.vbr_type = Audio::MPEG::Encoder::VBR_OFF
-      encoder.bitrate = config["mp3"]["bitrate"]
-      encoder.init
+      encoder = LAME::Encoder.new
+      encoder.configure do |encoder_config|
+        encoder_config.bitrate = config['mp3']['bitrate']
+        encoder_config.quality = 2
+      end
       @encoder = encoder
     end
 
-    def encode(in_buffer, &block)
-      @encoder.encode_io(in_buffer, &block)
+    def encode(samples, &block)
+      @encoder.encode_interleaved_short(samples, &block)
     end
 
     def flush(&block)
-      @encoder.flush_io(&block)
+      @encoder.flush(&block)
     end
   end
 end

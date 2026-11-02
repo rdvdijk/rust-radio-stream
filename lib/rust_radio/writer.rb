@@ -1,11 +1,13 @@
-module RustRadio
-  class Writer
+# frozen_string_literal: true
 
+module RustRadio
+  # Base class for writers, implementers should call `shout(data)` to stream audio
+  class Writer
     def initialize(config, type)
       # Shout streamers
       @streamers = []
 
-      config[type]["servers"].each do |mount|
+      config[type]['servers'].each do |mount|
         streamer = RustRadio::Streamer.new(config, mount)
         streamer.connect
         @streamers << streamer
@@ -46,13 +48,12 @@ module RustRadio
     end
 
     def update_metadata(song)
-      metadata = ShoutMetadata.new
-      metadata.add "song", song.stream_title
+      metadata = Shout::Metadata.new
+      metadata.add('song', song.stream_title)
 
       @streamers.each do |streamer|
         streamer.metadata = metadata
       end
     end
-
   end
 end

@@ -1,5 +1,7 @@
-module RustRadio
+# frozen_string_literal: true
 
+# Main Rust Radio module
+module RustRadio
   require 'rust_radio/db'
 
   require 'rust_radio/streamer'
@@ -32,5 +34,4 @@ module RustRadio
   require 'rust_radio/tweeter'
   require 'rust_radio/facebook_poster'
   require 'rust_radio/tune_in'
-
 end

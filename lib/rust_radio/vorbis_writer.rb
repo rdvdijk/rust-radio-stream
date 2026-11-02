@@ -1,8 +1,10 @@
-module RustRadio
-  class VorbisWriter < Writer
+# frozen_string_literal: true
 
+module RustRadio
+  # Writes OGG/Vorbis audio
+  class VorbisWriter < Writer
     def initialize(config)
-      super(config, "vorbis")
+      super(config, 'vorbis')
 
       @encoder = VorbisEncoder.new(config)
     end
@@ -24,6 +26,5 @@ module RustRadio
         shout(data)
       end
     end
-
   end
 end

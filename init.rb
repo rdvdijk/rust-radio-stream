@@ -1,24 +1,26 @@
+# frozen_string_literal: true
+
 # Defaults to UTC, but Rails app runs in CEST..
-ENV['TZ'] = "CEST"
+ENV['TZ'] = 'CEST'
 
 require 'rubygems'
 require 'bundler'
 
 Bundler.setup
 
-$:.unshift(File.join(File.dirname(__FILE__), "lib"))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
 require 'rust_radio'
 
-config = YAML.load_file("config/config.yml")["config"]
-database = config["database"]
-username = database["username"]
-password = database["password"]
-hostname = database["hostname"]
-database = database["database"]
+config = YAML.load_file('config/config.yml')['config']
+database = config['database']
+username = database['username']
+password = database['password']
+hostname = database['hostname']
+database = database['database']
 
 ActiveRecord::Base.establish_connection(
-  adapter:  "postgresql",
-  host:     hostname,
+  adapter: 'postgresql',
+  host: hostname,
   username: username,
   password: password,
   database: database

@@ -1,12 +1,14 @@
-module RustRadio
-  class Playlist < ActiveRecord::Base
+# frozen_string_literal: true
 
-    has_many :entries, -> { order("position ASC") }, class_name: "PlaylistEntry"
+module RustRadio
+  # Playlist class, contains the main show playing loop
+  class Playlist < ActiveRecord::Base
+    has_many :entries, -> { order('position ASC') }, class_name: 'PlaylistEntry'
     has_many :shows, through: :entries
 
     def play
       online!
-      while true
+      loop do
         entry = first
         entry.mark_start_of_song!
         yield entry.song_to_play

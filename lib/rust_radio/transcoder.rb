@@ -1,6 +1,8 @@
-module RustRadio
-  class Transcoder
+# frozen_string_literal: true
 
+module RustRadio
+  # Transcodes audio from a reader to multiple writers
+  class Transcoder
     def initialize(reader, writers)
       @reader  = reader
       @writers = writers
@@ -26,15 +28,13 @@ module RustRadio
     end
 
     def close
-      @writers.each do |writer|
-        writer.close
-      end
+      @writers.each(&:close)
     end
 
     private
 
     def set_synchronization_delay!
-      @synchronization_time = Time.now.to_f + shortest_delay/1000.0
+      @synchronization_time = Time.now.to_f + shortest_delay / 1000.0
     end
 
     def shortest_delay
@@ -48,6 +48,5 @@ module RustRadio
     def synchronize?
       Time.now.to_f >= @synchronization_time
     end
-
   end
 end

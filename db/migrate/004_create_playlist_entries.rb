@@ -1,5 +1,7 @@
-class CreatePlaylistEntries < ActiveRecord::Migration
+# frozen_string_literal: true
 
+# Create playlist entries table
+class CreatePlaylistEntries < ActiveRecord::Migration[8.1]
   def change
     create_table :playlist_entries do |t|
       t.integer :current_song, default: 0, null: false
@@ -9,5 +11,4 @@ class CreatePlaylistEntries < ActiveRecord::Migration
       t.timestamps
     end
   end
-
 end

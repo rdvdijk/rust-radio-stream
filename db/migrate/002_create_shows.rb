@@ -1,5 +1,7 @@
-class CreateShows < ActiveRecord::Migration
+# frozen_string_literal: true
 
+# Create shows table
+class CreateShows < ActiveRecord::Migration[8.1]
   def change
     create_table :shows do |t|
       t.string   :folder_path
@@ -14,5 +16,4 @@ class CreateShows < ActiveRecord::Migration
       t.timestamps
     end
   end
-
 end

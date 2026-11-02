@@ -7,3 +7,4 @@ config/puma/production.rb
 config/deploy/staging.rb
 config/deploy/production.rb
 *.rrd
+.bundle

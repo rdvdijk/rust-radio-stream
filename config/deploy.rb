@@ -1,8 +1,10 @@
-# config valid for current version and patch releases of Capistrano
-lock "~> 3.14.1"
+# frozen_string_literal: true
 
-set :application, "rust-radio-console"
-set :repo_url, "git@github.com:rdvdijk/rust_radio_stream.git"
+# config valid for current version and patch releases of Capistrano
+lock '~> 3.20.1'
+
+set :application, 'rust-radio-console'
+set :repo_url, 'https://github.com/rdvdijk/rust_radio_stream.git'
 
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
@@ -22,7 +24,7 @@ set :branch, ENV['BRANCH'] if ENV['BRANCH']
 # set :pty, true
 
 # Default value for :linked_files is []
-append :linked_files, "config/config.yml"
+append :linked_files, 'config/config.yml'
 append :linked_files, "config/puma/#{fetch(:stage)}.rb"
 
 # Default value for linked_dirs is []
@@ -41,18 +43,16 @@ set :keep_releases, 10
 # set :ssh_options, verify_host_key: :secure
 
 # Set Ruby version to use during deployment:
-set :chruby_ruby, 'ruby-2.7.1'
+set :chruby_ruby, 'ruby-3.4.12'
 
 namespace :deploy do
-
   desc 'Restart services'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      execute :sudo, :service, "rust-radio-console", :restart
-      execute :sudo, :service, "rust-radio-stream", :restart
+      execute :sudo, :service, 'rust-radio-console', :restart
+      execute :sudo, :service, 'rust-radio-stream', :restart
     end
   end
 
   after :publishing, :restart
-
 end

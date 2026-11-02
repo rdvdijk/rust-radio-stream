@@ -1,5 +1,7 @@
-class CreateSongs < ActiveRecord::Migration
+# frozen_string_literal: true
 
+# Create songs table
+class CreateSongs < ActiveRecord::Migration[8.1]
   def change
     create_table :songs do |t|
       t.string     :file_path,  null: false
@@ -10,5 +12,4 @@ class CreateSongs < ActiveRecord::Migration
       t.timestamps
     end
   end
-
 end

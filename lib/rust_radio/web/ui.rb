@@ -1,13 +1,16 @@
+# frozen_string_literal: true
+
 require 'sinatra/base'
 require 'haml'
 require 'sassc'
 
 module RustRadio
   module Web
+    # Main user interface class for playlist management
     class UI < Sinatra::Base
       set :logging, false # doesn't do anything?
-      set :views,         File.expand_path("../../../../views", __FILE__)
-      set :public_folder, File.expand_path("../../../../public", __FILE__)
+      set :views,         File.expand_path('../../../views', __dir__)
+      set :public_folder, File.expand_path('../../../public', __dir__)
 
       if production? || environment == :staging
         require 'rack/ssl-enforcer'
@@ -18,8 +21,8 @@ module RustRadio
         ActiveRecord::Base.connection.close
       end
 
-      get "/" do
-        @playlist = Playlist.where(name: "Default").first
+      get '/' do
+        @playlist = Playlist.where(name: 'Default').first
         playlist_show_ids = @playlist.entries.map(&:show_id)
 
         @shows_not_on_playlist = Show.all.reject do |show|
@@ -29,38 +32,38 @@ module RustRadio
         haml :index
       end
 
-      get "/stylesheet.css" do
+      get '/stylesheet.css' do
         scss :stylesheet
       end
 
-      get "/favicon.ico" do
+      get '/favicon.ico' do
       end
 
-      post "/move/:entry_id/to_top" do |entry_id|
+      post '/move/:entry_id/to_top' do |entry_id|
         entry = PlaylistEntry.find(entry_id)
         entry.move_to_top
-        "ok"
+        'ok'
       end
 
-      post "/move/:entry_id/below/:other_entry_id" do |entry_id, other_entry_id|
+      post '/move/:entry_id/below/:other_entry_id' do |entry_id, other_entry_id|
         entry = PlaylistEntry.find(entry_id)
         other_entry = PlaylistEntry.find(other_entry_id)
         entry.move_below(other_entry)
-        "ok"
+        'ok'
       end
 
-      post "/remove/:entry_id" do |entry_id|
+      post '/remove/:entry_id' do |entry_id|
         entry = PlaylistEntry.find(entry_id)
         entry.destroy
-        "ok"
+        'ok'
       end
 
-      post "/add/:show_id" do |show_id|
-        playlist = Playlist.where(name: "Default").first
+      post '/add/:show_id' do |show_id|
+        playlist = Playlist.where(name: 'Default').first
         show = Show.find(show_id)
 
         playlist.entries.create(show: show)
-        "ok"
+        'ok'
       end
     end
   end

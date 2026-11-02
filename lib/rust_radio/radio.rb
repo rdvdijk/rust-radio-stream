@@ -42,7 +42,7 @@ module RustRadio
     end
 
     def stream(song)
-      puts "playing: #{song.full_file_path}"
+      puts "playing: #{song.full_file_path} | #{song.stream_title}"
       social_media_next_song!(song)
       @transcoder.transcode(song)
     end

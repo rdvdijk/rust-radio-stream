@@ -32,7 +32,9 @@ group :staging, :production do
 end
 
 group :development do
-  gem 'capistrano', '~> 3.14', require: false
+  gem 'capistrano', '~> 3.20.1', require: false
+  gem 'capistrano-bundler', require: false
+  gem 'capistrano-chruby', require: false
   gem 'pry-nav'
   gem 'rubocop', require: false
   gem 'rubocop-performance', require: false

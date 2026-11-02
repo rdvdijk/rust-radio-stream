@@ -4,7 +4,7 @@
 lock '~> 3.20.1'
 
 set :application, 'rust-radio-console'
-set :repo_url, 'git@github.com:rdvdijk/rust_radio_stream.git'
+set :repo_url, 'https://github.com/rdvdijk/rust_radio_stream.git'
 
 # Default branch is :master
 # ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
@@ -44,11 +44,6 @@ set :keep_releases, 10
 
 # Set Ruby version to use during deployment:
 set :chruby_ruby, 'ruby-3.4.12'
-
-# Set environment variable, fixing ruby-shout compilation errors
-set :bundle_env_variables, fetch(:bundle_env_variables, {}).merge(
-  'BUNDLE_BUILD__RUBY_SHOUT' => '--with-cflags=-Wno-error=int-conversion'
-)
 
 namespace :deploy do
   desc 'Restart services'

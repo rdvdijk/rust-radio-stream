@@ -16,9 +16,9 @@ gem 'thor'
 
 gem 'haml'
 gem 'puma'
+gem 'rackup'
 gem 'sassc'
 gem 'sinatra'
-gem 'rackup'
 
 gem 'fb_graph2'
 gem 'twitter'

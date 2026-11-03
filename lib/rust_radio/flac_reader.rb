@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require 'ruby-audio'
+require 'sndfile'
 
 module RustRadio
   # Reader for FLAC files
   class FlacReader
+    BUFFER_FRAMES = 64 * 1024
+
     def update(song)
       @file_path = song.full_file_path
     end
 
-    def read
-      RubyAudio::Sound.open(@file_path) do |sound|
-        while (buffer = sound.read(:short, 64 * 1024)) && buffer.real_size.positive?
-          yield buffer
-        end
+    def read(&)
+      SndFile.open(@file_path) do |sound|
+        sound.each_buffer(BUFFER_FRAMES, type: :short, &)
       end
     end
   end

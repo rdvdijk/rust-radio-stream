@@ -1,25 +1,13 @@
 # frozen_string_literal: true
 
-require 'fb_graph2'
-
 module RustRadio
-  # Posts to Facebook every time a new show starts
+  # Posts to Facebook every time a new show starts.
+  #
+  # TODO: Re-implement Facebook posting. The fb_graph2 gem was removed, so this
+  # class is currently a no-op placeholder that keeps the existing interface.
   class FacebookPoster
-    def initialize(config)
-      @disabled = config['disabled']
-      @page = FbGraph2::User.me(config['access_token'])
-    end
+    def initialize(_config); end
 
-    def post(message)
-      return if @disabled
-
-      Thread.new do
-        @page.feed!(message: message)
-      end
-    end
-
-    def show_update(show_info)
-      post("Now playing: #{show_info}")
-    end
+    def show_update(_show_info); end
   end
 end

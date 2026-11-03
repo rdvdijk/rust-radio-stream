@@ -20,9 +20,6 @@ gem 'rackup'
 gem 'sassc'
 gem 'sinatra'
 
-gem 'fb_graph2'
-gem 'twitter'
-
 gem 'faraday'
 gem 'nokogiri'
 gem 'rrd-ffi'

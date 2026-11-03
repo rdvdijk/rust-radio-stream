@@ -5,7 +5,7 @@ gem 'ffi-shout', '0.1.1'
 gem 'flacinfo-rb', '1.0' # 1.1.0 has debugging output
 gem 'json'
 gem 'lame'
-gem 'ruby-audio'
+gem 'ffi-sndfile', '~> 0.1.0'
 
 gem 'activerecord'
 # gem 'activesupport'

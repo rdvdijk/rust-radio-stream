@@ -7,7 +7,7 @@ version of [Rust Radio](http://www.rustradio.org).
 It uses [ffi-shout](https://github.com/rdvdijk/ffi-shout) to stream to a
 [Icecast](http://icecast.org/) server.
 
-It reads FLAC files and encodes to Vorbis using [ruby-audio](https://github.com/warhammerkid/ruby-audio)
+It reads FLAC files and encodes to Vorbis using [ffi-sndfile](https://github.com/rdvdijk/ffi-sndfile)
 and encodes to MP3 using [lame](https://github.com/rdvdijk/lame).
 
 USAGE

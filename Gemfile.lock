@@ -65,6 +65,8 @@ GEM
     ffi (1.17.4-x86_64-linux-gnu)
     ffi-shout (0.1.1)
       ffi (~> 1.15)
+    ffi-sndfile (0.1.0)
+      ffi (~> 1.15)
     flacinfo-rb (1.0)
     haml (7.5.1)
       prism (>= 1.1.0)
@@ -173,7 +175,6 @@ GEM
       rubocop (~> 1.0)
     rubocop-rspec (2.12.1)
       rubocop (~> 1.31)
-    ruby-audio (1.6.1)
     ruby-progressbar (1.13.0)
     sassc (2.4.0)
       ffi (~> 1.9)
@@ -224,6 +225,7 @@ DEPENDENCIES
   faraday
   fb_graph2
   ffi-shout (= 0.1.1)
+  ffi-sndfile (~> 0.1.0)
   flacinfo-rb (= 1.0)
   haml
   json
@@ -239,7 +241,6 @@ DEPENDENCIES
   rubocop-performance
   rubocop-rake
   rubocop-rspec
-  ruby-audio
   sassc
   sinatra
   thor

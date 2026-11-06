@@ -283,13 +283,6 @@ module RustRadio
       put(row, col + label_width, value, label == 'Now playing' ? :playing : :value)
     end
 
-    def draw_box(top, left, width, height, title)
-      put(top, left, "┌#{'─' * (width - 2)}┐", :title)
-      put(top, left + 2, truncate(title, width - 4), :title)
-      (1...(height - 1)).each { |offset| put(top + offset, left, "│#{' ' * (width - 2)}│", :title) }
-      put(top + height - 1, left, "└#{'─' * (width - 2)}┘", :title)
-    end
-
     def draw_header
       put(1, 2, 'Playlist:', :label)
       put(1, 12, @playlist.name, :highlight)

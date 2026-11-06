@@ -146,6 +146,14 @@ module RustRadio
       put(row, 2, title, :title) if title
     end
 
+    # An empty box with +title+ in its top border, drawn over what's there.
+    def draw_box(top, left, width, height, title, style_name = :title)
+      put(top, left, "┌#{'─' * (width - 2)}┐", style_name)
+      put(top, left + 2, truncate(title, width - 4), style_name)
+      (1...(height - 1)).each { |offset| put(top + offset, left, "│#{' ' * (width - 2)}│", style_name) }
+      put(top + height - 1, left, "└#{'─' * (width - 2)}┘", style_name)
+    end
+
     # Rows available for the list between the header and the footer.
     def list_rows
       [@height - self.class::HEADER_ROWS - self.class::FOOTER_ROWS, 1].max

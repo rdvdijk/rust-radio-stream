@@ -11,8 +11,13 @@ module RustRadio
       raise Thor::MalformattedArgumentError, "#{path} does not exist." unless File.exist?(path)
       raise Thor::MalformattedArgumentError, "#{path} is not a directory." unless File.directory?(path)
 
+      # Shows are stored by absolute path, so "./show", "show/" and
+      # "/music/show" are all recognised as the same folder.
+      path = File.expand_path(path)
+      existing_show = RustRadio::Show.find_by(folder_path: path)
       flac_files = RustRadio::ShowAdder.flac_files(path)
-      if RustRadio::AddShowUI.new(path, options['playlist'], flac_files).run == :add
+      ui = RustRadio::AddShowUI.new(path, options['playlist'], flac_files, existing_show: existing_show)
+      if ui.run == :add
         RustRadio.logger.info("Adding folder: #{path}")
         RustRadio::ShowAdder.new.add(path, options['playlist'])
       else

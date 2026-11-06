@@ -15,6 +15,7 @@ module RustRadio
     HELP = [['↑/↓', 'scroll'], ['←/→/Tab', 'select'], ['Enter', 'confirm'], ['q/Esc', 'cancel']].freeze
     BUTTON_LABELS = { add: 'Add show', cancel: 'Cancel', ok: 'OK' }.freeze
     TAG_LABELS = { 'ARTIST' => 'Artist', 'ALBUM' => 'Album', 'DATE' => 'Date' }.freeze
+    EXISTING_MESSAGE = ['This show is already in the database,', "and can't be added a second time."].freeze
 
     # top border, folder, playlist, one row per common tag, list separator
     HEADER_ROWS = 4 + FlacDetails::COMMON_TAGS.size
@@ -30,8 +31,11 @@ module RustRadio
     # digits, spaces and common punctuation. Anything else is highlighted.
     EXPECTED_TITLE_CHARACTER = %r{[\p{L}\p{M}\p{Nd} ',.\-()!?:/’]}
 
-    def initialize(folder_path, playlist_name, flac_files)
+    # +existing_show+: the Show already added from this folder, if any. The
+    # screen then explains that it can't be added again and only offers OK.
+    def initialize(folder_path, playlist_name, flac_files, existing_show: nil)
       super()
+      @existing = existing_show && existing_summary(existing_show)
       @folder_path = folder_path
       @playlist_name = playlist_name
       @details = flac_files.map { |file| FlacDetails.new(folder_path, file) }
@@ -42,7 +46,7 @@ module RustRadio
       end
       @total_length = @details.sum { |flac| flac.length.to_f }
       build_lines
-      @buttons = BUTTON_LABELS.slice(*(flac_files.empty? ? [:ok] : %i[add cancel]))
+      @buttons = BUTTON_LABELS.slice(*(flac_files.empty? || @existing ? [:ok] : %i[add cancel]))
       @selected = 0
       @offset = 0
     end
@@ -50,6 +54,13 @@ module RustRadio
     private
 
     # --- Data ----------------------------------------------------------------
+
+    # The rows of the "already added" pop-up, read once from the database.
+    def existing_summary(show)
+      [['Show', show.long_title],
+       ['Added', show.created_at&.localtime&.strftime('%Y-%m-%d %H:%M') || 'unknown'],
+       ['Playlists', show.playlist_names.join(', ').presence || 'none']]
+    end
 
     def most_common(values)
       values.tally.max_by { |_value, count| count }&.first
@@ -124,6 +135,8 @@ module RustRadio
     # --- Input ---------------------------------------------------------------
 
     def handle_key(key)
+      return (ENTER_KEYS + QUIT_KEYS).include?(key) ? :cancel : nil if @existing
+
       case key
       when *ENTER_KEYS then @buttons.keys[@selected] == :add ? :add : :cancel
       when *QUIT_KEYS then :cancel
@@ -167,7 +180,29 @@ module RustRadio
       draw_header
       @details.empty? ? draw_empty : draw_files
       draw_buttons(@height - 4, @buttons, @selected)
-      draw_help(@height - 2, HELP)
+      draw_help(@height - 2, @existing ? [['Enter/q', 'close']] : HELP)
+      draw_existing_popup if @existing
+    end
+
+    # A red box over the file list, saying the show was added before.
+    def draw_existing_popup
+      label_width = @existing.map { |label, _value| label.length }.max + 2
+      content = (EXISTING_MESSAGE.map(&:length) + @existing.map { |_label, value| label_width + value.length }).max
+      width = [content + 6, @width - 4].min
+      # borders, a blank line above and below the message, one above the hint, and the hint
+      height = EXISTING_MESSAGE.size + @existing.size + 6
+      top = [(@height - height) / 2, 1].max
+      left = (@width - width) / 2
+
+      draw_box(top, left, width, height, ' Already added ', :error)
+      EXISTING_MESSAGE.each_with_index { |line, index| put(top + 2 + index, left + 3, line, :value) }
+      @existing.each_with_index do |(label, value), index|
+        row = top + 3 + EXISTING_MESSAGE.size + index
+        put(row, left + 3, label, :label)
+        put(row, left + 3 + label_width, truncate(value, width - 6 - label_width))
+      end
+      hint = 'press Enter or q to close'
+      put(top + height - 2, left + width - 3 - hint.length, hint, :help)
     end
 
     def list_title

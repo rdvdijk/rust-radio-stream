@@ -14,7 +14,7 @@ module RustRadio
       close(&)
       @sound = SndFile.open(@io, :write, format: :ogg, subtype: :vorbis,
                                          samplerate: 44_100, channels: 2,
-                                         strings: { title: title })
+                                         strings: { title: })
     end
 
     def encode(samples, &)

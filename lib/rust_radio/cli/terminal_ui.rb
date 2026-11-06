@@ -81,7 +81,6 @@ module RustRadio
     # Called on a getch timeout (+key+ nil) or a resize, instead of #handle_key.
     def on_idle(_key); end
 
-
     def setup
       ENV['ESCDELAY'] ||= '25' # don't wait a full second after Esc
       Curses.init_screen
@@ -118,7 +117,6 @@ module RustRadio
       end
     end
 
-
     def draw
       @height = Curses.lines
       @width = Curses.cols
@@ -153,31 +151,36 @@ module RustRadio
       put(row, 2, title, :title) if title
     end
 
-    def draw_box(top, left, width, height, title, style_name = :title)
-      put(top, left, "┌#{'─' * (width - 2)}┐", style_name)
-      put(top, left + 2, truncate(title, width - 4), style_name)
-      (1...(height - 1)).each { |offset| put(top + offset, left, "│#{' ' * (width - 2)}│", style_name) }
-      put(top + height - 1, left, "└#{'─' * (width - 2)}┘", style_name)
-    end
-
     # A box centered on the screen: optional +message+ lines, label/value
     # +rows+, and an optional +hint+ at the bottom right. A row is
     # [label, value, value_style = :value, cut = :end]; cut :start shortens a
     # long value from the left, which keeps the end of a path visible.
     def draw_popup(title, rows, message: [], style: :title, hint: nil)
       label_width = (rows.map { |label, _value| label.length }.max || 0) + 2
+      top, left, width, height = popup_box(title, rows, message, hint, label_width)
+      message_rows = message.any? ? message.size + 1 : 0
+
+      draw_box(top, left, width, height, title, style)
+      draw_popup_message(message, top + 2, left + 3, width - 6)
+      draw_popup_hint(top + height - 3, left + width - 3, hint) if hint
+      draw_popup_rows(rows, top + 2 + message_rows, top + height - 3 - (hint ? 2 : 0), left + 3, width - 6, label_width)
+    end
+
+    def draw_popup_message(message, row, col, width)
+      message.each_with_index { |line, index| put(row + index, col, truncate(line, width), :value) }
+    end
+
+    def draw_popup_hint(row, right_col, hint)
+      put(row, right_col - hint.length, hint, :help)
+    end
+
+    # [top, left, width, height] of a pop-up centered on the screen.
+    def popup_box(title, rows, message, hint, label_width)
       content = [*message.map(&:length), *rows.map { |_label, value| label_width + value.length }, title.length + 2].max
       width = [content + 6, POPUP_MAX_WIDTH, @width - 4].min
       lines = (message.any? ? message.size + 1 : 0) + rows.size + (hint ? 2 : 0)
       height = [lines + 4, @height - 2].min # borders, and a blank line at the top and bottom
-      top = [(@height - height) / 2, 0].max
-      left = (@width - width) / 2
-
-      draw_box(top, left, width, height, title, style)
-      message.each_with_index { |line, index| put(top + 2 + index, left + 3, truncate(line, width - 6), :value) }
-      first_row = top + 2 + (message.any? ? message.size + 1 : 0)
-      draw_popup_rows(rows, first_row, top + height - 3 - (hint ? 2 : 0), left + 3, width - 6, label_width)
-      put(top + height - 3, left + width - 3 - hint.length, hint, :help) if hint
+      [[(@height - height) / 2, 0].max, (@width - width) / 2, width, height]
     end
 
     def draw_popup_rows(rows, first_row, last_row, col, width, label_width)
@@ -194,10 +197,6 @@ module RustRadio
 
     def list_rows
       [@height - self.class::HEADER_ROWS - self.class::FOOTER_ROWS, 1].max
-    end
-
-    def last_index(count)
-      [count - 1, 0].max
     end
 
     def draw_scroll_hints(first_row, right_col, above, below)
@@ -226,14 +225,25 @@ module RustRadio
       end
     end
 
+    public
+
+    # The drawing API, also for overlays such as TextViewer (see #width and #height).
+    def draw_box(top, left, width, height, title, style_name = :title)
+      put(top, left, "┌#{'─' * (width - 2)}┐", style_name)
+      put(top, left + 2, truncate(title, width - 4), style_name)
+      (1...(height - 1)).each { |offset| put(top + offset, left, "│#{' ' * (width - 2)}│", style_name) }
+      put(top + height - 1, left, "└#{'─' * (width - 2)}┘", style_name)
+    end
+
+    def last_index(count)
+      [count - 1, 0].max
+    end
+
     # A help line of [key, action, short_key] items from +col+ up to +right+.
     # If the line doesn't fit, items use their short key (if they have one);
     # items that still don't fit are left out.
     def draw_help(row, items, col: 2, right: @width - 2)
-      full_width = items.sum { |key, action| key.length + action.length + 1 } + (3 * (items.size - 1))
-      items = items.map { |key, action, short_key| [short_key || key, action] } if col + full_width > right
-
-      items.each_with_index do |(key, action), index|
+      shortened_help(items, right - col).each_with_index do |(key, action), index|
         separator = index.zero? ? '' : ' · '
         hint = " #{action}"
         break if col + separator.length + key.length + hint.length > right
@@ -246,6 +256,11 @@ module RustRadio
       end
     end
 
+    # +items+ with their short keys if the full line is wider than +width+.
+    def shortened_help(items, width)
+      full_width = items.sum { |key, action| key.length + action.length + 1 } + (3 * (items.size - 1))
+      full_width > width ? items.map { |key, action, short_key| [short_key || key, action] } : items
+    end
 
     def put(row, col, text, style_name = nil)
       return if col >= @width || row >= @height || col.negative?
@@ -271,8 +286,5 @@ module RustRadio
 
       "…#{text[(text.length - width + 1)..]}"
     end
-
-    # The drawing API for overlays (see #width and #height).
-    public :put, :draw_box, :draw_help, :truncate, :truncate_left, :last_index
   end
 end

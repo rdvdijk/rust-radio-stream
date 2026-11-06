@@ -5,7 +5,6 @@ require 'faraday'
 require 'nokogiri'
 
 module RustRadio
-
   # Updates an RRD graph to show the number of listeners
   class RRD
     def initialize(config_file)

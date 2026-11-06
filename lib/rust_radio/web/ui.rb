@@ -62,7 +62,7 @@ module RustRadio
         playlist = Playlist.where(name: 'Default').first
         show = Show.find(show_id)
 
-        playlist.entries.create(show: show)
+        playlist.entries.create(show:)
         'ok'
       end
     end

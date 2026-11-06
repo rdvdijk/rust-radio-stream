@@ -23,9 +23,9 @@ module RustRadio
                    id: @station_id,
                    partnerId: @partner_id,
                    partnerKey: @partner_key,
-                   title: title,
-                   artist: artist,
-                   album: album
+                   title:,
+                   artist:,
+                   album:
                  }
       end
     end

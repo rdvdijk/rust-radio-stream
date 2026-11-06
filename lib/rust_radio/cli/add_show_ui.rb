@@ -48,10 +48,7 @@ module RustRadio
       @playlist_name = playlist_name
       @details = flac_files.map { |file| FlacDetails.new(folder_path, file) }
       @readable = @details.select(&:readable?)
-      @defaults = FlacDetails::COMMON_TAGS.to_h { |tag| [tag, most_common(@readable.map { |flac| flac[tag] })] }
-      @differ_counts = FlacDetails::COMMON_TAGS.to_h do |tag|
-        [tag, @readable.count { |flac| differing_tags(flac).include?(tag) }]
-      end
+      summarize_tags
       @total_length = @details.sum { |flac| flac.length.to_f }
       build_lines
       @buttons = BUTTON_LABELS.slice(*(flac_files.empty? || @existing ? [:ok] : %i[add cancel]))
@@ -60,7 +57,6 @@ module RustRadio
     end
 
     private
-
 
     def existing_summary(show)
       [['Show', show.long_title],
@@ -74,6 +70,14 @@ module RustRadio
         segment = [col, text, style]
         col += text.length
         segment
+      end
+    end
+
+    # The value most files have for each common tag, and how many files differ.
+    def summarize_tags
+      @defaults = FlacDetails::COMMON_TAGS.to_h { |tag| [tag, most_common(@readable.map { |flac| flac[tag] })] }
+      @differ_counts = FlacDetails::COMMON_TAGS.to_h do |tag|
+        [tag, @readable.count { |flac| differing_tags(flac).include?(tag) }]
       end
     end
 
@@ -135,7 +139,6 @@ module RustRadio
       segments(DETAIL_COL, parts)
     end
 
-
     # While the show is already added, only OK is offered, so Enter cancels
     # too; the file list behind the pop-up doesn't scroll.
     def handle_key(key)
@@ -183,7 +186,6 @@ module RustRadio
       [@lines.size - list_rows, 0].max
     end
 
-
     def draw_screen
       @offset = @offset.clamp(0, max_offset)
       draw_frame(TITLE, [@height - 5, @height - 3])
@@ -230,7 +232,8 @@ module RustRadio
       parts = if count.zero?
                 [["no shows from #{year} in the database yet", :playing]]
               else
-                [["#{count} #{count == 1 ? 'show' : 'shows'}", :highlight], [" from #{year} already in the database", :label]]
+                [["#{count} #{count == 1 ? 'show' : 'shows'}", :highlight],
+                 [" from #{year} already in the database", :label]]
               end
       segments(col, [[' · ', :label], *parts])
     end
@@ -268,9 +271,11 @@ module RustRadio
     end
 
     def format_duration(milliseconds)
-      seconds = (milliseconds / 1000).round
-      hours, rest = seconds.divmod(3600)
-      hours.positive? ? format('%d:%02d:%02d', hours, *rest.divmod(60)) : format('%d:%02d', *rest.divmod(60))
+      hours, rest = (milliseconds / 1000).round.divmod(3600)
+      minutes, seconds = rest.divmod(60)
+      return format('%<minutes>d:%<seconds>02d', minutes:, seconds:) unless hours.positive?
+
+      format('%<hours>d:%<minutes>02d:%<seconds>02d', hours:, minutes:, seconds:)
     end
   end
 end

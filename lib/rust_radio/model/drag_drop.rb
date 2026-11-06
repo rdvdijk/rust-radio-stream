@@ -20,22 +20,16 @@ module RustRadio
     # Returns true if the entry moved; on a refusal, the reason is in #errors.
     def move_to(new_position)
       reload
-      return refuse("Can't move the show that is playing while the radio is online.") unless removable?
-
-      first_free = playlist.online? ? 2 : 1 # removable? reloaded the playlist
-      if new_position < first_free && position == first_free
-        return refuse('The show that is playing stays at the top while the radio is online.')
-      end
+      reason = move_refusal(new_position)
+      return refuse(reason) if reason
 
       last = playlist.entries.size
-      return false if last < first_free
+      return false if last < first_free_position
 
-      new_position = new_position.clamp(first_free, last)
+      new_position = new_position.clamp(first_free_position, last)
       return false if new_position == position
 
-      displaced_first = playlist.first if first? || new_position == 1
-      insert_at(new_position)
-      displaced_first&.reload&.reset! unless playlist.online?
+      insert_and_reset(new_position)
       true
     end
 
@@ -45,6 +39,25 @@ module RustRadio
     end
 
     private
+
+    # Checks the database for the online state: removable? reloads the playlist.
+    def move_refusal(new_position)
+      return "Can't move the show that is playing while the radio is online." unless removable?
+      return unless new_position < first_free_position && position == first_free_position
+
+      'The show that is playing stays at the top while the radio is online.'
+    end
+
+    # The playing entry keeps first place while online.
+    def first_free_position
+      playlist.online? ? 2 : 1
+    end
+
+    def insert_and_reset(new_position)
+      displaced_first = playlist.first if first? || new_position == 1
+      insert_at(new_position)
+      displaced_first.reload.reset! if displaced_first && !playlist.online?
+    end
 
     def refuse(reason)
       errors.add(:base, reason)

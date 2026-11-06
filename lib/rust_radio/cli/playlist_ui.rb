@@ -61,7 +61,6 @@ module RustRadio
       [record.errors.full_messages.join(' '), :error]
     end
 
-
     def reload_data
       selected_ids = SIDES.to_h { |side| [side, selected_item(side)&.id] }
       @playlist.reload
@@ -84,7 +83,6 @@ module RustRadio
     def show_of(item)
       item.is_a?(PlaylistEntry) ? item.show : item
     end
-
 
     def handle_key(key)
       if @confirm
@@ -132,7 +130,6 @@ module RustRadio
       @cursor[@active] = target.clamp(0, last)
     end
 
-
     def move_selected
       item = selected_item
       return unless item
@@ -142,14 +139,13 @@ module RustRadio
     end
 
     def add_show(show)
-      @playlist.entries.create!(show: show)
+      @playlist.entries.create!(show:)
       @message = ["Added to the playlist: #{show.long_title}", :playing]
     end
 
     def remove_entry(entry)
       @message = entry.destroy ? ["Removed from the playlist: #{entry.show_title}", :playing] : error_message(entry)
     end
-
 
     def open_popup
       item = selected_item
@@ -175,7 +171,8 @@ module RustRadio
 
       song = item.song_to_play
       label = @playlist.online? ? 'Now playing' : 'Next song'
-      rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}", (:playing if @playlist.online?)]
+      rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}",
+               (:playing if @playlist.online?)]
     end
 
     def reorder_selected(key)
@@ -214,7 +211,7 @@ module RustRadio
 
     # Show +question+ with a [y/N] prompt; y runs the block.
     def ask(question, action, &block)
-      @confirm = { question: "#{question} [y/N]", action: action, block: block }
+      @confirm = { question: "#{question} [y/N]", action:, block: }
     end
 
     def answer_confirm(key)
@@ -231,7 +228,6 @@ module RustRadio
       @message = show.destroy ? ["Deleted from the database: #{show.long_title}", :playing] : error_message(show)
       reload_data
     end
-
 
     # The column of the line between the two panels.
     def split

@@ -33,8 +33,7 @@ module RustRadio
       transaction do
         reload
         old_first = first
-        fixed = online? ? entries.first(1) : []
-        order = fixed + (entries.to_a - fixed).shuffle
+        order = shuffled_entries
         order.each_with_index { |entry, index| entry.update_column(:position, index + 1) }
         old_first.reset! if old_first && !online? && order.first != old_first
       end
@@ -50,6 +49,11 @@ module RustRadio
     end
 
     private
+
+    def shuffled_entries
+      fixed = online? ? entries.first(1) : []
+      fixed + (entries.to_a - fixed).shuffle
+    end
 
     def online!
       self.online = true

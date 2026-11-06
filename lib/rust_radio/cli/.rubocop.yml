@@ -1,0 +1,20 @@
+inherit_from: ../../../.rubocop.yml
+
+# The curses screens are mostly drawing code: placing text at computed rows
+# and columns, and dispatching keys in case statements. That scores high on
+# these metrics without being hard to follow, so they get more room here
+# than the rest of the code.
+Metrics/AbcSize:
+  Max: 30
+
+Metrics/CyclomaticComplexity:
+  Max: 16
+
+Metrics/PerceivedComplexity:
+  Max: 12
+
+Metrics/ClassLength:
+  Max: 300
+
+Metrics/ParameterLists:
+  Max: 7

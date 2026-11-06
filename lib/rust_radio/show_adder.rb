@@ -28,7 +28,7 @@ module RustRadio
 
       lines = File.readlines(File.join(folder_path, file), chomp: true)
       info = INFO_FIELDS.zip(lines).to_h
-      info.merge(lines: lines, date: parse_date(info[:date_text]))
+      info.merge(lines:, date: parse_date(info[:date_text]))
     end
 
     def self.parse_date(text)

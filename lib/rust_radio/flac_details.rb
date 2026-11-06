@@ -47,12 +47,18 @@ module RustRadio
 
     def read(path)
       info = FlacInfo.new(path)
-      info.tags.each { |name, value| @tags[name.to_s.upcase] = clean(value) if value.is_a?(String) }
-
+      read_tags(info)
       samplerate = info.streaminfo['samplerate'].to_i
       @length = info.streaminfo['total_samples'] / samplerate.to_f * 1000 if samplerate.positive?
+      check(info, samplerate)
+    end
 
-      # ShowAdder refuses a file with any warning.
+    def read_tags(info)
+      info.tags.each { |name, value| @tags[name.to_s.upcase] = clean(value) if value.is_a?(String) }
+    end
+
+    # ShowAdder refuses a file with any warning.
+    def check(info, samplerate)
       @warnings << 'TITLE tag not set' unless info.tags['TITLE']
       @warnings << "Sample rate is #{samplerate} Hz, must be #{SAMPLE_RATE}" unless samplerate == SAMPLE_RATE
     end

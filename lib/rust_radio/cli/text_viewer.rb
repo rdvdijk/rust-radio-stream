@@ -42,23 +42,25 @@ module RustRadio
       nil
     end
 
-    def draw(ui)
-      top = 1
-      left = 1 # just inside the screen's frame, so its separators don't show around the box
-      width = ui.width - 2
-      height = ui.height - 2
-      rows = rows(ui.height)
-      files_width = [[(@files.map(&:length).max || 0) + 10, 16].max, width / 3].min
-      split = left + 1 + files_width
+    # The box starts at row 1, column 1: just inside the screen's frame, so the
+    # frame's separators don't show around it.
+    def draw(screen)
+      width = screen.width - 2
+      rows = rows(screen.height)
+      split = 2 + files_width(width)
 
-      ui.draw_box(top, left, width, height, ' Text files ')
-      (top + 1..top + rows + 1).each { |row| ui.put(row, split, '│', :title) }
-      draw_files(ui, top + 1, left + 1, files_width, rows)
-      draw_text(ui, top + 1, split + 2, left + width - 2 - (split + 2), rows)
-      ui.draw_help(top + height - 2, HELP, col: left + 2, right: left + width - 2)
+      screen.draw_box(1, 1, width, screen.height - 2, ' Text files ')
+      (2..rows + 2).each { |row| screen.put(row, split, '│', :title) }
+      draw_files(screen, 2, 2, split - 2, rows)
+      draw_text(screen, 2, split + 2, width - 1 - (split + 2), rows)
+      screen.draw_help(screen.height - 3, HELP, col: 3, right: width - 1)
     end
 
     private
+
+    def files_width(box_width)
+      [[(@files.map(&:length).max || 0) + 10, 16].max, box_width / 3].min
+    end
 
     def text_files
       Dir.children(@folder_path).select do |file|
@@ -71,7 +73,6 @@ module RustRadio
     def rows(screen_height)
       screen_height - 6
     end
-
 
     def move(key, page)
       case key
@@ -94,7 +95,6 @@ module RustRadio
       @scroll = 0 unless index == @cursor
       @cursor = index
     end
-
 
     def text_lines(file)
       @texts[file] ||= read_text(File.join(@folder_path, file))
@@ -142,42 +142,50 @@ module RustRadio
       lines
     end
 
-
-    def draw_files(ui, row, col, width, rows)
-      ui.put(row, col + 1, 'Files', @focus == :files ? :title : :label)
-      return ui.put(row + 2, col + 1, '(none)', :label) if @files.empty?
+    def draw_files(screen, row, col, width, rows)
+      screen.put(row, col + 1, 'Files', @focus == :files ? :title : :label)
+      return screen.put(row + 2, col + 1, '(none)', :label) if @files.empty?
 
       @offset = @cursor - rows + 1 if @cursor >= @offset + rows
       @offset = @cursor if @cursor < @offset
       @files[@offset, rows].each_with_index do |file, index|
-        draw_file(ui, row + 1 + index, col, width, file, @offset + index == @cursor)
+        draw_file(screen, row + 1 + index, col, width, file, @offset + index == @cursor)
       end
     end
 
-    def draw_file(ui, row, col, width, file, selected)
+    def draw_file(screen, row, col, width, file, selected)
       label = file == @info_file ? ' (info)' : ''
-      text = " #{ui.truncate(file, width - 2 - label.length)}#{label}"
+      text = " #{screen.truncate(file, width - 2 - label.length)}#{label}"
       if selected
-        ui.put(row, col, text.ljust(width), @focus == :files ? :cursor_selected : :cursor)
+        screen.put(row, col, text.ljust(width), @focus == :files ? :cursor_selected : :cursor)
       else
-        ui.put(row, col, text)
-        ui.put(row, col + text.length - label.length, label, :label) unless label.empty?
+        screen.put(row, col, text)
+        screen.put(row, col + text.length - label.length, label, :label) unless label.empty?
       end
     end
 
-    def draw_text(ui, row, col, width, rows)
+    def draw_text(screen, row, col, width, rows)
       file = @files[@cursor]
-      return ui.put(row + 2, col, 'No text files in this folder.', :highlight) unless file
+      return screen.put(row + 2, col, 'No text files in this folder.', :highlight) unless file
 
       lines = wrapped_lines(file, width)
       @scroll = @scroll.clamp(0, [lines.size - rows, 0].max).to_i
-      position = lines.size > rows ? "  lines #{@scroll + 1}–#{[@scroll + rows, lines.size].min} of #{lines.size}" : ''
+      draw_text_title(screen, row, col, width, file, lines.size > rows ? position(lines.size, rows) : '')
+      return screen.put(row + 2, col, '(empty file)', :label) if lines.all?(&:empty?)
 
-      ui.put(row, col, ui.truncate(file, width - position.length), @focus == :text ? :title : :label)
-      ui.put(row, col + width - position.length, position, :label)
-      return ui.put(row + 2, col, '(empty file)', :label) if lines.all?(&:empty?)
+      lines[@scroll, rows].each_with_index do |line, index|
+        screen.put(row + 1 + index, col, screen.truncate(line, width))
+      end
+    end
 
-      lines[@scroll, rows].each_with_index { |line, index| ui.put(row + 1 + index, col, ui.truncate(line, width)) }
+    # The file name, with "lines 12–30 of 85" at the right if it scrolls.
+    def draw_text_title(screen, row, col, width, file, position)
+      screen.put(row, col, screen.truncate(file, width - position.length), @focus == :text ? :title : :label)
+      screen.put(row, col + width - position.length, position, :label)
+    end
+
+    def position(line_count, rows)
+      "  lines #{@scroll + 1}–#{[@scroll + rows, line_count].min} of #{line_count}"
     end
   end
 end

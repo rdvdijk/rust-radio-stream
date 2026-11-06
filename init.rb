@@ -21,7 +21,7 @@ database = database['database']
 ActiveRecord::Base.establish_connection(
   adapter: 'postgresql',
   host: hostname,
-  username: username,
-  password: password,
-  database: database
+  username:,
+  password:,
+  database:
 )

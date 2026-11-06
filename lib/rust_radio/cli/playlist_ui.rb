@@ -17,14 +17,10 @@ module RustRadio
 
     REFRESH_MS = 2000 # reload periodically, the radio changes the playlist as it plays
     DELETE_KEYS = ['d', 'D', Curses::KEY_DC].freeze
-    MOVE_KEYS = ENTER_KEYS
-    INFO_KEYS = [' '].freeze
-    POPUP_MAX_WIDTH = 76
     SHUFFLE_KEYS = %w[s S].freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
     REORDER_KEYS = %w[k j g G].freeze
-    CURSOR_ALIASES = { 'k' => Curses::KEY_UP, 'j' => Curses::KEY_DOWN,
-                       'g' => Curses::KEY_HOME, 'G' => Curses::KEY_END }.freeze
+    POPUP_MAX_WIDTH = 76
 
     def initialize(playlist)
       super()
@@ -50,6 +46,21 @@ module RustRadio
       Curses.stdscr.timeout = REFRESH_MS
     end
 
+    # The periodic refresh, skipped while a prompt or pop-up is open.
+    def on_idle(key)
+      safely { reload_data } if key.nil? && !@confirm && !@popup
+    end
+
+    def safely
+      yield
+    rescue ActiveRecord::ActiveRecordError => e
+      @message = ["Database error: #{e.message}", :error]
+    end
+
+    def error_message(record)
+      [record.errors.full_messages.join(' '), :error]
+    end
+
     # --- Data ----------------------------------------------------------------
 
     def reload_data
@@ -57,8 +68,7 @@ module RustRadio
       @playlist.reload
       @items = {
         left: @playlist.entries.includes(:show).to_a,
-        right: Show.where.not(id: @playlist.entries.where.not(show_id: nil).select(:show_id))
-                   .order(:date, :artist).to_a
+        right: Show.where.not(id: @playlist.shows.select(:id)).order(:date, :artist).to_a
       }
       SIDES.each { |side| restore_cursor(side, selected_ids[side]) }
     end
@@ -66,7 +76,7 @@ module RustRadio
     # Keep the same item selected; if it's gone, stay at the same position.
     def restore_cursor(side, selected_id)
       index = @items[side].index { |item| item.id == selected_id }
-      @cursor[side] = (index || @cursor[side]).clamp(0, [@items[side].size - 1, 0].max)
+      @cursor[side] = (index || @cursor[side]).clamp(0, last_index(@items[side].size))
     end
 
     def selected_item(side = @active)
@@ -80,29 +90,30 @@ module RustRadio
     # --- Input ---------------------------------------------------------------
 
     def handle_key(key)
-      return answer_confirm(key) if @confirm
-      return close_popup(key) if @popup
-      return :quit if QUIT_KEYS.include?(key)
-
-      @message = nil unless key.nil? || key == Curses::KEY_RESIZE
-      perform(key)
-      nil
-    rescue ActiveRecord::ActiveRecordError => e
-      @message = ["Database error: #{e.message}", :error]
+      if @confirm
+        answer_confirm(key)
+      elsif @popup
+        @popup = nil # any key closes the pop-up, without doing anything else
+      elsif QUIT_KEYS.include?(key)
+        return :quit
+      else
+        @message = nil
+        safely { perform(key) }
+      end
       nil
     end
 
     def perform(key)
       case key
-      when nil, 'r', 'R' then reload_data
+      when 'r', 'R' then reload_data
       when *TAB_KEYS, Curses::KEY_BTAB then @active = @active == :left ? :right : :left
       when Curses::KEY_LEFT then @active = :left
       when Curses::KEY_RIGHT then @active = :right
-      when *MOVE_KEYS then move_selected
-      when *INFO_KEYS then open_popup
+      when *ENTER_KEYS then move_selected
+      when ' ' then open_popup
       when 'l' then move_selected if @active == :left # left → right: remove from playlist
       when 'h' then move_selected if @active == :right # right → left: add to playlist
-      when *REORDER_KEYS then @active == :left ? reorder_selected(key) : move_cursor(CURSOR_ALIASES[key])
+      when *REORDER_KEYS then @active == :left ? reorder_selected(key) : move_cursor(key)
       when *SHUFFLE_KEYS then ask_shuffle
       when *DELETE_KEYS then ask_delete
       else move_cursor(key)
@@ -110,12 +121,18 @@ module RustRadio
     end
 
     def move_cursor(key)
-      steps = { Curses::KEY_UP => -1, Curses::KEY_DOWN => 1, Curses::KEY_PPAGE => -list_rows,
-                Curses::KEY_NPAGE => list_rows, Curses::KEY_HOME => -@items[@active].size,
-                Curses::KEY_END => @items[@active].size }
-      return unless steps.key?(key)
-
-      @cursor[@active] = (@cursor[@active] + steps[key]).clamp(0, [@items[@active].size - 1, 0].max)
+      cursor = @cursor[@active]
+      last = last_index(@items[@active].size)
+      target = case key
+               when Curses::KEY_UP, 'k' then cursor - 1
+               when Curses::KEY_DOWN, 'j' then cursor + 1
+               when Curses::KEY_PPAGE then cursor - list_rows
+               when Curses::KEY_NPAGE then cursor + list_rows
+               when Curses::KEY_HOME, 'g' then 0
+               when Curses::KEY_END, 'G' then last
+               else return
+               end
+      @cursor[@active] = target.clamp(0, last)
     end
 
     # --- Actions -------------------------------------------------------------
@@ -134,11 +151,7 @@ module RustRadio
     end
 
     def remove_entry(entry)
-      @message = if entry.destroy
-                   ["Removed from the playlist: #{entry.show_title}", :playing]
-                 else
-                   [entry.errors.full_messages.join(' '), :error]
-                 end
+      @message = entry.destroy ? ["Removed from the playlist: #{entry.show_title}", :playing] : error_message(entry)
     end
 
     # --- Show info pop-up ----------------------------------------------------
@@ -150,13 +163,6 @@ module RustRadio
 
       show = show_of(item)
       @popup = { title: " #{show.artist} · #{show.date} ", rows: show_info(show) + entry_info(item) }
-    end
-
-    # Any key closes the pop-up, without doing anything else; the periodic
-    # refresh and resizes don't count.
-    def close_popup(key)
-      @popup = nil unless key.nil? || key == Curses::KEY_RESIZE
-      nil
     end
 
     def show_info(show)
@@ -188,9 +194,7 @@ module RustRadio
       if entry.move_to(target)
         reload_data # the cursor follows the entry
       elsif entry.errors.any?
-        @message = [entry.errors.full_messages.join(' '), :error]
-      elsif target < entry.position && @playlist.reload.online?
-        @message = ['The show that is playing stays at the top while the radio is online.', :highlight]
+        @message = error_message(entry)
       end
     end
 
@@ -221,37 +225,30 @@ module RustRadio
       @confirm = { question: "#{question} [y/N]", action: action, block: block }
     end
 
-    # Any key other than y cancels; the periodic refresh and resizes don't count.
+    # Any key other than y cancels.
     def answer_confirm(key)
-      return nil if key.nil? || key == Curses::KEY_RESIZE
-
       confirm = @confirm
       @confirm = nil
       if %w[y Y].include?(key)
-        confirm[:block].call
+        safely { confirm[:block].call }
       else
         @message = ["#{confirm[:action].capitalize} cancelled.", :label]
       end
-      nil
     end
 
     def delete_show(show)
-      @message = if show.destroy
-                   ["Deleted from the database: #{show.long_title}", :playing]
-                 else
-                   [show.errors.full_messages.join(' '), :error]
-                 end
+      @message = show.destroy ? ["Deleted from the database: #{show.long_title}", :playing] : error_message(show)
       reload_data
     end
 
     # --- Drawing -------------------------------------------------------------
 
-    def list_rows
-      [@height - HEADER_ROWS - FOOTER_ROWS, 1].max
+    # The column of the line between the two panels.
+    def split
+      @width / 2
     end
 
     def draw_screen
-      @split = @width / 2
       draw_frame(TITLE, [@height - 3])
       draw_header
       draw_panel_borders
@@ -306,18 +303,18 @@ module RustRadio
     def draw_panel_borders
       horizontal_line(HEADER_ROWS - 1, '├', '┤')
       horizontal_line(@height - 5, '├', '┤')
-      put(HEADER_ROWS - 1, @split, '┬', :border)
-      put(@height - 5, @split, '┴', :border)
-      (HEADER_ROWS...(HEADER_ROWS + list_rows)).each { |row| put(row, @split, '│', :border) }
+      put(HEADER_ROWS - 1, split, '┬', :border)
+      put(@height - 5, split, '┴', :border)
+      (HEADER_ROWS...(HEADER_ROWS + list_rows)).each { |row| put(row, split, '│', :border) }
 
       put(HEADER_ROWS - 1, 2, " On playlist (#{@items[:left].size}) ", @active == :left ? :title : :label)
-      put(HEADER_ROWS - 1, @split + 2, " Not on playlist (#{@items[:right].size}) ",
+      put(HEADER_ROWS - 1, split + 2, " Not on playlist (#{@items[:right].size}) ",
           @active == :right ? :title : :label)
     end
 
     # Column and width of the inside of a panel.
     def panel_bounds(side)
-      side == :left ? [1, @split - 1] : [@split + 1, @width - @split - 2]
+      side == :left ? [1, split - 1] : [split + 1, @width - split - 2]
     end
 
     def draw_panel(side)
@@ -325,12 +322,13 @@ module RustRadio
       return draw_empty_panel(side, col) if @items[side].empty?
 
       scroll_into_view(side)
-      items = @items[side][@offset[side], list_rows]
-      items.each_with_index do |item, index|
-        draw_item(side, item, @offset[side] + index, HEADER_ROWS + index, col, width)
+      above = @offset[side]
+      below = @items[side].size - above - list_rows
+      @items[side][above, list_rows].each_with_index do |item, index|
+        draw_item(side, item, above + index, HEADER_ROWS + index, col, width,
+                  hint: scroll_hint_row?(index, above, below))
       end
-      below = @items[side].size - @offset[side] - list_rows
-      draw_scroll_hints(HEADER_ROWS, list_rows, col + width - 1, @offset[side], below)
+      draw_scroll_hints(HEADER_ROWS, col + width - 1, above, below)
     end
 
     def scroll_into_view(side)
@@ -340,10 +338,10 @@ module RustRadio
       @offset[side] = @offset[side].clamp(0, [@items[side].size - list_rows, 0].max)
     end
 
-    def draw_item(side, item, index, row, col, width)
+    # +hint+: the row shares space with a "▲/▼ N more" hint.
+    def draw_item(side, item, index, row, col, width, hint: false)
       prefix, prefix_style = item_prefix(side, item, index)
-      text_width = width - prefix.length - 1
-      text_width -= SCROLL_HINT_WIDTH if scroll_hint_row?(side, index)
+      text_width = width - prefix.length - 1 - (hint ? SCROLL_HINT_WIDTH : 0)
       text = truncate(show_of(item).long_title, text_width)
 
       if index == @cursor[side] && side == @active
@@ -352,12 +350,6 @@ module RustRadio
         put(row, col, prefix, prefix_style)
         put(row, col + prefix.length, text, index == @cursor[side] ? :cursor : nil)
       end
-    end
-
-    # Whether the item at +index+ shares its row with a "▲/▼ N more" hint.
-    def scroll_hint_row?(side, index)
-      (index == @offset[side] && @offset[side].positive?) ||
-        (index == @offset[side] + list_rows - 1 && index < @items[side].size - 1)
     end
 
     # The "▶  1 " in front of a playlist entry, or just a margin for other shows.

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'flacinfo'
+require 'rust_radio/flac_details'
 
 module RustRadio
   # Used to add FLAC shows to the database
@@ -70,14 +70,10 @@ module RustRadio
     end
 
     def song_attributes(flac)
-      info = FlacInfo.new(File.join(@folder_path, flac))
-      streaminfo = info.streaminfo
-      samplerate = streaminfo['samplerate']
-      raise "Incompatible sample rate (#{samplerate}) in #{flac}" unless samplerate == 44_100
+      details = FlacDetails.new(@folder_path, flac)
+      raise "#{flac}: #{details.warnings.join('; ')}" if details.warnings.any?
 
-      { file_path: flac,
-        title: info.tags['TITLE'] || raise("Tag 'TITLE' not set in #{flac}"),
-        length: (streaminfo['total_samples'] / samplerate.to_f) * 1000 }
+      { file_path: flac, title: details.title, length: details.length }
     end
 
     def update_show_length

@@ -29,7 +29,7 @@ module RustRadio
       RustRadio::PlaylistUI.new(playlist).run
     end
 
-    desc 'clear',"Remove all shows (just don't!)."
+    desc 'clear', "Remove all shows (just don't!)."
     method_options really: :boolean
     def clear
       DataMapper.auto_migrate! if options['really']

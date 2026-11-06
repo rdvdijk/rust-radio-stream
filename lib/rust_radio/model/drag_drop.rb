@@ -1,39 +1,17 @@
 # frozen_string_literal: true
 
 module RustRadio
-  # Drag-drop module used in the playlist UI
+  # Reordering a playlist entry, used by the web UI and the playlist CLI.
+  # All moves go through #move_to, which holds the playlist rules.
   module DragDrop
-    # Move to top if offline, move to second place if online.
+    # Move to the top, or to second place while online.
     def move_to_top
-      return if first?
-
-      if playlist.online? && !first?
-        insert_at(2)
-      else
-        playlist.first.reset!
-        super
-      end
+      move_to(1)
     end
 
     # Move below the given other entry.
-    # Reset the current song if moving the first entry.
-    # Don't move the first entry when online.
     def move_below(other)
-      new_position = other.position
-      new_position += 1 if position >= other.position
-
-      if playlist.online?
-        if first?
-          # can't move the first entry while playing
-        else
-          insert_at(new_position)
-        end
-      else
-        reset! if first?
-        insert_at(new_position)
-        save
-        reload
-      end
+      move_to(position >= other.position ? other.position + 1 : other.position)
     end
 
     # Move to +new_position+ (1-based, clamped to the playlist). While online,
@@ -42,12 +20,13 @@ module RustRadio
     # Returns true if the entry moved; on a refusal, the reason is in #errors.
     def move_to(new_position)
       reload
-      unless removable? # also reloads the playlist
-        errors.add(:base, "Can't move the show that is playing while the radio is online.")
-        return false
+      return refuse("Can't move the show that is playing while the radio is online.") unless removable?
+
+      first_free = playlist.online? ? 2 : 1 # removable? reloaded the playlist
+      if new_position < first_free && position == first_free
+        return refuse('The show that is playing stays at the top while the radio is online.')
       end
 
-      first_free = playlist.online? ? 2 : 1
       last = playlist.entries.size
       return false if last < first_free
 
@@ -63,6 +42,13 @@ module RustRadio
     def reset!
       self.current_song = 0
       save
+    end
+
+    private
+
+    def refuse(reason)
+      errors.add(:base, reason)
+      false
     end
   end
 end

@@ -8,12 +8,13 @@ module RustRadio
 
     has_many :songs, -> { order('sort_order ASC') }, dependent: :delete_all
     has_many :playlist_entries
+    has_many :playlists, through: :playlist_entries
 
     validates_uniqueness_of :folder_path
 
     # Names of the playlists this show is on.
     def playlist_names
-      Playlist.joins(:entries).where(playlist_entries: { show_id: id }).distinct.pluck(:name)
+      playlists.distinct.pluck(:name)
     end
 
     def get(index)

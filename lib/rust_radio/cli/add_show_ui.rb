@@ -37,6 +37,10 @@ module RustRadio
       @details = flac_files.map { |file| FlacDetails.new(folder_path, file) }
       @readable = @details.select(&:readable?)
       @defaults = FlacDetails::COMMON_TAGS.to_h { |tag| [tag, most_common(@readable.map { |flac| flac[tag] })] }
+      @differ_counts = FlacDetails::COMMON_TAGS.to_h do |tag|
+        [tag, @readable.count { |flac| differing_tags(flac).include?(tag) }]
+      end
+      @total_length = @details.sum { |flac| flac.length.to_f }
       build_lines
       @buttons = BUTTON_LABELS.slice(*(flac_files.empty? ? [:ok] : %i[add cancel]))
       @selected = 0
@@ -150,10 +154,6 @@ module RustRadio
       @selected = (@selected + step) % @buttons.size
     end
 
-    def list_rows
-      [@height - HEADER_ROWS - FOOTER_ROWS, 1].max
-    end
-
     def max_offset
       [@lines.size - list_rows, 0].max
     end
@@ -171,8 +171,7 @@ module RustRadio
     end
 
     def list_title
-      total = @details.sum { |flac| flac.length.to_f }
-      " FLAC files (#{@details.size})#{" · #{format_duration(total)}" if total.positive?} "
+      " FLAC files (#{@details.size})#{" · #{format_duration(@total_length)}" if @total_length.positive?} "
     end
 
     def draw_header
@@ -186,7 +185,7 @@ module RustRadio
 
     # "Artist:  Neil Young   (2 of 14 differ)"
     def draw_common_tag(row, tag, width)
-      differ = @readable.count { |flac| differing_tags(flac).include?(tag) }
+      differ = @differ_counts[tag]
       note = differ.positive? ? "  (#{differ} of #{@readable.size} differ)" : ''
       value = truncate(@defaults[tag] || '(not set)', width - note.length)
 
@@ -198,13 +197,11 @@ module RustRadio
     def draw_files
       above = @file_starts.count { |start| start < @offset }
       below = @file_starts.count { |start| start >= @offset + list_rows }
-      visible = @lines[@offset, list_rows]
-      visible.each_with_index do |line, index|
-        # Only the rows that carry a "N more" hint make room for it.
-        hint = (index.zero? && above.positive?) || (index == list_rows - 1 && below.positive?)
-        draw_line(HEADER_ROWS + index, line, @width - 2 - (hint ? SCROLL_HINT_WIDTH : 0))
+      @lines[@offset, list_rows].each_with_index do |line, index|
+        hint_width = scroll_hint_row?(index, above, below) ? SCROLL_HINT_WIDTH : 0
+        draw_line(HEADER_ROWS + index, line, @width - 2 - hint_width)
       end
-      draw_scroll_hints(HEADER_ROWS, list_rows, @width - 2, above, below)
+      draw_scroll_hints(HEADER_ROWS, @width - 2, above, below)
     end
 
     # Draws the segments of a line, keeping all text left of +right_edge+. The

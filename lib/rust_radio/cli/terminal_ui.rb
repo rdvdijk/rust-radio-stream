@@ -7,7 +7,11 @@ module RustRadio
   # the shared color scheme, the main loop and drawing helpers.
   #
   # Subclasses implement #draw_screen (called when the terminal is big enough)
-  # and #handle_key, which returns a non-nil value to end #run with.
+  # and #handle_key, which returns a non-nil value to end #run with. They
+  # define HEADER_ROWS and FOOTER_ROWS, the rows around their list.
+  #
+  # Only real keys reach #handle_key: a getch timeout or a terminal resize
+  # goes to #on_idle instead, followed by a redraw.
   class TerminalUI
     # getch returns control characters as Integers; accept Strings too, to be safe.
     ENTER_KEYS = [10, 13, "\n", "\r", Curses::KEY_ENTER].freeze
@@ -31,11 +35,9 @@ module RustRadio
       cursor_selected: [Curses::COLOR_BLACK, Curses::COLOR_CYAN],
       playing: [Curses::COLOR_GREEN, -1],
       error: [Curses::COLOR_RED, -1],
-      mark: [Curses::COLOR_BLACK, Curses::COLOR_YELLOW] # something to look at, like an odd character
+      mark: [Curses::COLOR_BLACK, Curses::COLOR_YELLOW], # something to look at, like an odd character
+      ok_selected: [Curses::COLOR_BLACK, Curses::COLOR_WHITE]
     }.freeze
-
-    # Styles that fall back to reverse video without color support.
-    REVERSE_FALLBACK = %i[mark].freeze
 
     ATTRIBUTES = {
       border: Curses::A_DIM, label: Curses::A_DIM, number: Curses::A_DIM, help: Curses::A_DIM,
@@ -50,7 +52,13 @@ module RustRadio
       setup
       loop do
         draw
-        result = handle_key(Curses.getch)
+        key = Curses.getch
+        if key.nil? || key == Curses::KEY_RESIZE
+          on_idle(key)
+          next
+        end
+
+        result = handle_key(key)
         return result if result
       end
     rescue Interrupt
@@ -60,6 +68,9 @@ module RustRadio
     end
 
     private
+
+    # Called on a getch timeout (+key+ nil) or a resize, instead of #handle_key.
+    def on_idle(_key); end
 
     # --- Setup ---------------------------------------------------------------
 
@@ -85,14 +96,14 @@ module RustRadio
       end
     end
 
-    # Curses attributes for a style name. Without color support, "*_selected"
-    # styles fall back to reverse video.
+    # Curses attributes for a style name. Without color support, a style
+    # drawn on a colored background falls back to reverse video.
     def style(name)
       attrs = ATTRIBUTES.fetch(name, Curses::A_NORMAL)
       pair_index = COLOR_PAIRS.keys.index(name)
       if @colors && pair_index
         attrs | Curses.color_pair(pair_index + 1)
-      elsif name.to_s.end_with?('_selected') || REVERSE_FALLBACK.include?(name)
+      elsif pair_index && COLOR_PAIRS[name][1] != -1
         attrs | Curses::A_REVERSE
       else
         attrs
@@ -135,13 +146,28 @@ module RustRadio
       put(row, 2, title, :title) if title
     end
 
-    def draw_scroll_hints(first_row, rows, right_col, above, below)
-      draw_scroll_hint(first_row, right_col, "▲ #{above} more") if above.positive?
-      draw_scroll_hint(first_row + rows - 1, right_col, "▼ #{below} more") if below.positive?
+    # Rows available for the list between the header and the footer.
+    def list_rows
+      [@height - self.class::HEADER_ROWS - self.class::FOOTER_ROWS, 1].max
     end
 
-    def draw_scroll_hint(row, right_col, text)
-      put(row, right_col - text.length, text, :highlight)
+    # The index of the last item, or 0 for an empty list; for clamping.
+    def last_index(count)
+      [count - 1, 0].max
+    end
+
+    # "▲ N more" on the first list row and "▼ N more" on the last one.
+    def draw_scroll_hints(first_row, right_col, above, below)
+      { first_row => ("▲ #{above} more" if above.positive?),
+        first_row + list_rows - 1 => ("▼ #{below} more" if below.positive?) }.each do |row, text|
+        put(row, right_col - text.length, text, :highlight) if text
+      end
+    end
+
+    # Whether visible row +index+ shares its row with a scroll hint, and
+    # so has SCROLL_HINT_WIDTH less room for text.
+    def scroll_hint_row?(index, above, below)
+      (index.zero? && above.positive?) || (index == list_rows - 1 && below.positive?)
     end
 
     # Buttons centered on +row+; +buttons+ maps button names to labels.

@@ -52,7 +52,7 @@ module RustRadio
       samplerate = info.streaminfo['samplerate'].to_i
       @length = info.streaminfo['total_samples'] / samplerate.to_f * 1000 if samplerate.positive?
 
-      # The same checks as ShowAdder#song_attributes, so problems show up before adding.
+      # ShowAdder refuses a file with any warning.
       @warnings << 'TITLE tag not set' unless info.tags['TITLE']
       @warnings << "Sample rate is #{samplerate} Hz, must be #{SAMPLE_RATE}" unless samplerate == SAMPLE_RATE
     end

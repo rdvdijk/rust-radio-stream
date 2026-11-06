@@ -30,14 +30,18 @@ module RustRadio
       cancel_selected: [Curses::COLOR_BLACK, Curses::COLOR_RED],
       cursor_selected: [Curses::COLOR_BLACK, Curses::COLOR_CYAN],
       playing: [Curses::COLOR_GREEN, -1],
-      error: [Curses::COLOR_RED, -1]
+      error: [Curses::COLOR_RED, -1],
+      mark: [Curses::COLOR_BLACK, Curses::COLOR_YELLOW] # something to look at, like an odd character
     }.freeze
+
+    # Styles that fall back to reverse video without color support.
+    REVERSE_FALLBACK = %i[mark].freeze
 
     ATTRIBUTES = {
       border: Curses::A_DIM, label: Curses::A_DIM, number: Curses::A_DIM, help: Curses::A_DIM,
       title: Curses::A_BOLD, value: Curses::A_BOLD, key: Curses::A_BOLD, cursor: Curses::A_BOLD,
       add_selected: Curses::A_BOLD, cancel_selected: Curses::A_BOLD, ok_selected: Curses::A_BOLD,
-      playing: Curses::A_BOLD, error: Curses::A_BOLD
+      playing: Curses::A_BOLD, error: Curses::A_BOLD, mark: Curses::A_BOLD
     }.freeze
 
     # Runs the UI until #handle_key returns a value, and returns that value.
@@ -88,7 +92,7 @@ module RustRadio
       pair_index = COLOR_PAIRS.keys.index(name)
       if @colors && pair_index
         attrs | Curses.color_pair(pair_index + 1)
-      elsif name.to_s.end_with?('_selected')
+      elsif name.to_s.end_with?('_selected') || REVERSE_FALLBACK.include?(name)
         attrs | Curses::A_REVERSE
       else
         attrs

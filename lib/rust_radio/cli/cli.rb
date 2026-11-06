@@ -11,8 +11,32 @@ module RustRadio
       raise Thor::MalformattedArgumentError, "#{path} does not exist." unless File.exist?(path)
       raise Thor::MalformattedArgumentError, "#{path} is not a directory." unless File.directory?(path)
 
-      puts "Adding folder: #{path}"
-      RustRadio::ShowAdder.new.add(path, options['playlist'])
+      path = File.expand_path(path) # for display and logging; Show normalizes folder_path itself
+      ui = add_show_ui(path)
+      if ui.run == :add
+        RustRadio.logger.info("Adding folder: #{path}")
+        RustRadio::ShowAdder.new.add(path, options['playlist'], notes: ui.notes)
+      else
+        RustRadio.logger.info("Cancelled adding folder: #{path}")
+      end
+    end
+
+    no_commands do
+      def add_show_ui(path)
+        date = RustRadio::ShowAdder.show_date(path)
+        RustRadio::AddShowUI.new(path, options['playlist'], RustRadio::ShowAdder.flac_files(path),
+                                 existing_show: RustRadio::Show.find_by(folder_path: path),
+                                 year_count: date && [date.year, RustRadio::Show.in_year(date.year).count])
+      end
+    end
+
+    desc 'playlist', 'Add and remove shows on a playlist, and delete shows that are on no playlist.'
+    method_option :playlist, type: :string, default: 'Default'
+    def playlist
+      playlist = RustRadio::Playlist.find_by(name: options['playlist'])
+      raise Thor::Error, "Playlist '#{options['playlist']}' does not exist." unless playlist
+
+      RustRadio::PlaylistUI.new(playlist).run
     end
 
     desc 'clear', "Remove all shows (just don't!)."

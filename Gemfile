@@ -2,16 +2,18 @@
 
 source 'https://rubygems.org'
 gem 'ffi-shout', '0.1.1'
+gem 'ffi-sndfile', '~> 0.1.0'
 gem 'flacinfo-rb', '1.0' # 1.1.0 has debugging output
 gem 'json'
 gem 'lame'
-gem 'ffi-sndfile', '~> 0.1.0'
 
 gem 'activerecord'
 # gem 'activesupport'
 gem 'acts_as_list', require: false
 gem 'pg'
 
+gem 'curses'
+gem 'rake' # also on the server, where deploys run `rake db:migrate`
 gem 'thor'
 
 gem 'haml'
@@ -33,8 +35,6 @@ group :development do
   gem 'capistrano-bundler', require: false
   gem 'capistrano-chruby', require: false
   gem 'pry-nav'
-  gem 'rubocop', require: false
-  gem 'rubocop-performance', require: false
-  gem 'rubocop-rake', require: false
-  gem 'rubocop-rspec', require: false
+  gem 'rubocop', '~> 1.92', require: false
+  gem 'rubocop-rake', '~> 0.7', require: false
 end

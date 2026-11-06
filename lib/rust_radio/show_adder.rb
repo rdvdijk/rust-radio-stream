@@ -1,13 +1,51 @@
 # frozen_string_literal: true
 
-require 'flacinfo'
+require 'rust_radio/flac_details'
 
 module RustRadio
   # Used to add FLAC shows to the database
   class ShowAdder
-    def add(folder_path, playlist_name)
+    # The FLAC files in a folder, in the order they will be added as songs.
+    def self.flac_files(folder_path)
+      Dir.children(folder_path).grep(/\.flac$/).sort
+    end
+
+    # The info file of a show folder (artist, date, venue, city, festival, one
+    # per line), or nil if there is none.
+    def self.info_file(folder_path)
+      Dir.children(folder_path).reverse.find do |entry|
+        entry =~ /\.txt$/ && entry !~ /orig/ && entry !~ /ffp/
+      end
+    end
+
+    INFO_FIELDS = %i[artist date_text venue city_state festival].freeze
+
+    # The fields of a show's info file, plus :lines (all of them) and :date
+    # (parsed from :date_text, nil if it isn't a date). Nil without an info file.
+    def self.read_info(folder_path)
+      file = info_file(folder_path)
+      return unless file
+
+      lines = File.readlines(File.join(folder_path, file), chomp: true)
+      info = INFO_FIELDS.zip(lines).to_h
+      info.merge(lines:, date: parse_date(info[:date_text]))
+    end
+
+    def self.parse_date(text)
+      Date.parse(text.to_s)
+    rescue Date::Error
+      nil
+    end
+
+    def self.show_date(folder_path)
+      read_info(folder_path)&.dig(:date)
+    end
+
+    # +notes+: free text saved with the show, for example why it was added.
+    def add(folder_path, playlist_name, notes: nil)
       @folder_path = folder_path
       @playlist_name = playlist_name
+      @notes = notes
 
       begin
         Show.transaction do |_t|
@@ -18,17 +56,13 @@ module RustRadio
           add_to_playlist
         end
       rescue StandardError => e
-        puts "ERROR: #{e}"
+        RustRadio.logger.error("ERROR: #{e}")
       end
     end
 
     def collect_files
-      @flac_files = []
-      @info_file = nil
-      Dir.foreach(@folder_path) do |entry|
-        @flac_files << entry if entry =~ /\.flac$/
-        @info_file = entry if entry =~ /\.txt$/ && entry !~ /orig/ && entry !~ /ffp/
-      end
+      @flac_files = self.class.flac_files(@folder_path)
+      @info_file = self.class.info_file(@folder_path)
       raise "Could not find files in #{@folder_path}" if @flac_files.empty? || !@info_file
     end
 
@@ -36,45 +70,38 @@ module RustRadio
       @show = Show.new(show_attributes)
 
       unless @show.valid?
-        puts "Could not add show: #{@show.errors.full_messages.join(',')}"
+        RustRadio.logger.info("Could not add show: #{@show.errors.full_messages.join(',')}")
         raise 'Show has already been added (?).'
       end
 
-      puts "Adding show: #{@show.date} : #{@show.artist} @ #{@show.city_state}"
+      RustRadio.logger.info("Adding show: #{@show.date} : #{@show.artist} @ #{@show.city_state}")
       @show.save!
     end
 
     def show_attributes
-      lines = File.readlines(File.join(@folder_path, @info_file), chomp: true)
-      artist, date, venue, city_state, festival = lines
+      info = self.class.read_info(@folder_path)
+      raise "Can't read the date '#{info[:date_text]}' in #{@info_file}" unless info[:date]
 
       { folder_path: @folder_path,
-        artist: artist,
-        date: Date.parse(date),
-        city_state: city_state,
-        venue: venue,
-        festival: festival,
-        info_file: lines.join('\n'),
-        setlist_identifier: "#{date.gsub(/[^\d]/, '')}0" }
+        **info.slice(:artist, :date, :venue, :city_state, :festival),
+        notes: @notes,
+        info_file: info[:lines].join('\n'),
+        setlist_identifier: "#{info[:date_text].gsub(/[^\d]/, '')}0" }
     end
 
     def add_songs
-      @flac_files.sort.each_with_index do |flac, index|
+      @flac_files.each_with_index do |flac, index|
         @show.songs.create(**song_attributes(flac), sort_order: index + 1)
-        putc '.'
+        $stdout.putc '.'
       end
-      puts
+      $stdout.puts
     end
 
     def song_attributes(flac)
-      info = FlacInfo.new(File.join(@folder_path, flac))
-      streaminfo = info.streaminfo
-      samplerate = streaminfo['samplerate']
-      raise "Incompatible sample rate (#{samplerate}) in #{flac}" unless samplerate == 44_100
+      details = FlacDetails.new(@folder_path, flac)
+      raise "#{flac}: #{details.warnings.join('; ')}" if details.warnings.any?
 
-      { file_path: flac,
-        title: info.tags['TITLE'] || raise("Tag 'TITLE' not set in #{flac}"),
-        length: (streaminfo['total_samples'] / samplerate.to_f) * 1000 }
+      { file_path: flac, title: details.title, length: details.length }
     end
 
     def update_show_length
@@ -83,10 +110,10 @@ module RustRadio
     end
 
     def add_to_playlist
-      @playlist = Playlist.first_or_create(name: @playlist_name)
+      @playlist = Playlist.find_or_create_by!(name: @playlist_name)
       @playlist.entries.create(show: @show)
 
-      puts "Added to playlist '#{@playlist.name}'."
+      RustRadio.logger.info("Added to playlist '#{@playlist.name}'.")
     end
   end
 end

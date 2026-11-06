@@ -14,10 +14,10 @@ module RustRadio
 
     def update!
       if @rrd.update(Time.now, listener_count)
-        # puts "updated listener count: #{listener_count}"
+        # RustRadio.logger.info("updated listener count: #{listener_count}")
       else
-        puts @rrd.error
-        puts 'error updating...'
+        RustRadio.logger.error(@rrd.error)
+        RustRadio.logger.error('error updating...')
       end
     end
 
@@ -28,7 +28,7 @@ module RustRadio
 
       return if File.exist?(rrd_path)
 
-      puts "creating RRD file: #{rrd_path}"
+      RustRadio.logger.info("creating RRD file: #{rrd_path}")
       # fix strange off-by-one hour
       @rrd.create start: Time.now - 3600, step: 60.seconds do
         datasource 'listeners', type: :gauge, heartbeat: 120.seconds, min: 0, max: :unlimited

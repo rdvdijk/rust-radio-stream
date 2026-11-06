@@ -1,6 +1,19 @@
+plugins:
+  - rubocop-rake
+
+AllCops:
+  NewCops: enable
+
 Metrics/MethodLength:
   Max: 15
 
 Metrics/BlockLength:
   Exclude:
     - Rakefile
+
+# move_to does the move and returns whether it happened, like
+# ActiveRecord's save; it isn't a question, so it doesn't end in "?".
+Naming/PredicateMethod:
+  AllowedMethods:
+    - call
+    - move_to

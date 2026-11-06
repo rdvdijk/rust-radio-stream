@@ -104,7 +104,7 @@ module RustRadio
     end
 
     def log(message)
-      puts "[#{log_prefix}] #{message}"
+      RustRadio.logger.info("[#{log_prefix}] #{message}")
     end
 
     def log_prefix

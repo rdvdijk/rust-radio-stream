@@ -12,6 +12,16 @@ module RustRadio
 
     include RustRadio::DragDrop
 
+    # Runs before acts_as_list's callbacks, so a refused removal changes nothing.
+    before_destroy :ensure_removable, prepend: true
+
+    # The entry that is playing (the first one, while the radio is online)
+    # can't be removed. Checks the database, as the radio runs in another process.
+    def removable?
+      playlist.reload
+      !(playlist.online? && playlist.first == self)
+    end
+
     def song_to_play
       show.get(current_song)
     end
@@ -35,8 +45,20 @@ module RustRadio
     end
 
     def mark_start_of_song!
-      self.song_started_at = Time.now
-      save!
+      now = Time.now
+      transaction do
+        update!(song_started_at: now)
+        show.update!(last_played_at: now) if starting?
+      end
+    end
+
+    private
+
+    def ensure_removable
+      return if removable?
+
+      errors.add(:base, "Can't remove the show that is playing while the radio is online.")
+      throw :abort
     end
   end
 end

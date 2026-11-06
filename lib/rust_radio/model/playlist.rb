@@ -27,6 +27,19 @@ module RustRadio
       entries.first
     end
 
+    # Put the entries in a random order. While online, the playing (first)
+    # entry stays first. Offline, the old first entry starts over if it moves.
+    def shuffle!
+      transaction do
+        reload
+        old_first = first
+        order = shuffled_entries
+        order.each_with_index { |entry, index| entry.update_column(:position, index + 1) }
+        old_first.reset! if old_first && !online? && order.first != old_first
+      end
+      reload
+    end
+
     def current_show_title
       first.show_title
     end
@@ -36,6 +49,11 @@ module RustRadio
     end
 
     private
+
+    def shuffled_entries
+      fixed = online? ? entries.first(1) : []
+      fixed + (entries.to_a - fixed).shuffle
+    end
 
     def online!
       self.online = true

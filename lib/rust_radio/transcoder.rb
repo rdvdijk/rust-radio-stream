@@ -34,7 +34,7 @@ module RustRadio
     private
 
     def set_synchronization_delay!
-      @synchronization_time = Time.now.to_f + shortest_delay / 1000.0
+      @synchronization_time = Time.now.to_f + (shortest_delay / 1000.0)
     end
 
     def shortest_delay

@@ -14,12 +14,12 @@ module RustRadio
       @encoder = encoder
     end
 
-    def encode(samples, &block)
-      @encoder.encode_interleaved_short(samples, &block)
+    def encode(samples, &)
+      @encoder.encode_interleaved_short(samples, &)
     end
 
-    def flush(&block)
-      @encoder.flush(&block)
+    def flush(&)
+      @encoder.flush(&)
     end
   end
 end

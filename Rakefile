@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'rubocop/rake_task'
-
 namespace :db do
   desc 'Run ActiveRecord migrations.'
   task :migrate do #=> :environment do
@@ -50,6 +48,12 @@ namespace :sanity do
   end
 end
 
-RuboCop::RakeTask.new
-
-task default: %i[rubocop]
+# RuboCop is a development gem, so it isn't installed on the server, where
+# deploys run `rake db:migrate`.
+begin
+  require 'rubocop/rake_task'
+  RuboCop::RakeTask.new
+  task default: %i[rubocop]
+rescue LoadError
+  nil
+end

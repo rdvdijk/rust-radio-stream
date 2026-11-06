@@ -37,6 +37,7 @@ module RustRadio
       end
 
       get '/favicon.ico' do
+        # There is no favicon; answer with an empty page rather than a 404.
       end
 
       post '/move/:entry_id/to_top' do |entry_id|

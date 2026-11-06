@@ -50,7 +50,7 @@ module RustRadio
       split = 2 + files_width(width)
 
       screen.draw_box(1, 1, width, screen.height - 2, ' Text files ')
-      (2..rows + 2).each { |row| screen.put(row, split, '│', :title) }
+      (2..(rows + 2)).each { |row| screen.put(row, split, '│', :title) }
       draw_files(screen, 2, 2, split - 2, rows)
       draw_text(screen, 2, split + 2, width - 1 - (split + 2), rows)
       screen.draw_help(screen.height - 3, HELP, col: 3, right: width - 1)
@@ -59,7 +59,8 @@ module RustRadio
     private
 
     def files_width(box_width)
-      [[(@files.map(&:length).max || 0) + 10, 16].max, box_width / 3].min
+      # Not clamp(16, max): in a narrow terminal the maximum is below 16, and then it wins.
+      [(@files.map(&:length).max || 0) + 10, 16].max.clamp(..(box_width / 3))
     end
 
     def text_files

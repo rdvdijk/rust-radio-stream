@@ -21,7 +21,10 @@ module RustRadio
     def move_to(new_position)
       reload
       reason = move_refusal(new_position)
-      return refuse(reason) if reason
+      if reason
+        errors.add(:base, reason)
+        return false
+      end
 
       last = playlist.entries.size
       return false if last < first_free_position
@@ -57,11 +60,6 @@ module RustRadio
       displaced_first = playlist.first if first? || new_position == 1
       insert_at(new_position)
       displaced_first.reload.reset! if displaced_first && !playlist.online?
-    end
-
-    def refuse(reason)
-      errors.add(:base, reason)
-      false
     end
   end
 end

@@ -233,7 +233,8 @@ module RustRadio
       put(row, 2, 'Notes:', :label)
       return put(row, LABEL_COL, truncate(@notes, width), :value) if @notes
 
-      put(row, LABEL_COL, @existing ? '(none)' : '(none yet; press n to add why this show is added)', :label)
+      put(row, LABEL_COL, truncate(@existing ? '(none)' : '(none yet; press n to add why this show is added)', width),
+          :label)
     end
 
     # "Artist:  Neil Young   (2 of 14 differ)"

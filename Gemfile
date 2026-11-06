@@ -34,8 +34,6 @@ group :development do
   gem 'capistrano-bundler', require: false
   gem 'capistrano-chruby', require: false
   gem 'pry-nav'
-  gem 'rubocop', require: false
-  gem 'rubocop-performance', require: false
-  gem 'rubocop-rake', require: false
-  gem 'rubocop-rspec', require: false
+  gem 'rubocop', '~> 1.92', require: false
+  gem 'rubocop-rake', '~> 0.7', require: false
 end

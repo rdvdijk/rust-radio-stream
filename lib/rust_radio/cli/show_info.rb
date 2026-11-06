@@ -25,10 +25,12 @@ module RustRadio
                "#{entry.current_song + 1}/#{entry.show.songs.size} #{song&.title}", (:playing if online)]
     end
 
-    # "8h 40m"
+    # "8h 40m", or "1d 2h 34m" from 24 hours on
     def format_length(milliseconds)
       minutes = (milliseconds / 60_000).round
-      "#{minutes / 60}h #{(minutes % 60).to_s.rjust(2, '0')}m"
+      days, minutes = minutes.divmod(24 * 60)
+      hours_minutes = "#{minutes / 60}h #{(minutes % 60).to_s.rjust(2, '0')}m"
+      days.positive? ? "#{days}d #{hours_minutes}" : hours_minutes
     end
   end
 end

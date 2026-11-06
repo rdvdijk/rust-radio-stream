@@ -18,6 +18,9 @@ module RustRadio
     TAB_KEYS = [9, "\t"].freeze
     ESCAPE_KEYS = [27, "\e"].freeze
     QUIT_KEYS = [*ESCAPE_KEYS, 'q', 'Q'].freeze
+    # Scrolling by a page, as in less: Shift+Space can't be told apart from Space.
+    PAGE_DOWN_KEYS = [Curses::KEY_NPAGE, ' ', 'f'].freeze
+    PAGE_UP_KEYS = [Curses::KEY_PPAGE, 'b'].freeze
 
     MIN_WIDTH = 40
     MIN_HEIGHT = 10
@@ -191,13 +194,13 @@ module RustRadio
       end
     end
 
-    # A help line of [key, action] pairs. Pairs that don't fit are left out.
-    def draw_help(row, items)
-      col = 2
+    # A help line of [key, action] pairs from +col+ up to +right+. Pairs that
+    # don't fit are left out.
+    def draw_help(row, items, col: 2, right: @width - 2)
       items.each_with_index do |(key, action), index|
         separator = index.zero? ? '' : ' · '
         hint = " #{action}"
-        break if col + separator.length + key.length + hint.length > @width - 2
+        break if col + separator.length + key.length + hint.length > right
 
         put(row, col, separator, :help)
         col += separator.length

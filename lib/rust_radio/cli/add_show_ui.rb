@@ -2,6 +2,8 @@
 
 require 'rust_radio/cli/terminal_ui'
 require 'rust_radio/flac_details'
+require 'rust_radio/show_adder'
+require 'rust_radio/cli/text_viewer'
 
 module RustRadio
   # Full-screen terminal UI that lists the FLAC files of a show folder, with
@@ -11,8 +13,13 @@ module RustRadio
   # The tags most files share (artist, album, date) are shown once at the top;
   # a file only lists them when it differs.
   class AddShowUI < TerminalUI
+    include TextViewer
+
     TITLE = ' Rust Radio · Add show '
-    HELP = [['↑/↓', 'scroll'], ['←/→/Tab', 'select'], ['Enter', 'confirm'], ['q/Esc', 'cancel']].freeze
+    # ←/→ also select a button and Esc also cancels; they're left out to fit 80 columns.
+    HELP = [['↑/↓', 'scroll'], ['f/b', 'page'], %w[Tab select], %w[Enter confirm], ['t', 'text files'],
+            %w[q cancel]].freeze
+    TEXT_VIEWER_KEY = 't'
     BUTTON_LABELS = { add: 'Add show', cancel: 'Cancel', ok: 'OK' }.freeze
     TAG_LABELS = { 'ARTIST' => 'Artist', 'ALBUM' => 'Album', 'DATE' => 'Date' }.freeze
     EXISTING_MESSAGE = ['This show is already in the database,', "and can't be added a second time."].freeze
@@ -139,6 +146,12 @@ module RustRadio
     # --- Input ---------------------------------------------------------------
 
     def handle_key(key)
+      return text_viewer_key(key) if text_viewer_open?
+
+      if key == TEXT_VIEWER_KEY
+        open_text_viewer(@folder_path, info_file: ShowAdder.info_file(@folder_path))
+        return nil
+      end
       return (ENTER_KEYS + QUIT_KEYS).include?(key) ? :cancel : nil if @existing
 
       case key
@@ -154,8 +167,8 @@ module RustRadio
       case key
       when Curses::KEY_UP then scroll_by(-1)
       when Curses::KEY_DOWN then scroll_by(1)
-      when Curses::KEY_PPAGE then scroll_by(-list_rows)
-      when Curses::KEY_NPAGE, ' ' then scroll_by(list_rows)
+      when *PAGE_UP_KEYS then scroll_by(-list_rows)
+      when *PAGE_DOWN_KEYS then scroll_by(list_rows)
       when Curses::KEY_HOME then @offset = 0
       when Curses::KEY_END then @offset = max_offset
       when Curses::KEY_LEFT, Curses::KEY_BTAB then select_button(-1)
@@ -184,8 +197,9 @@ module RustRadio
       draw_header
       @details.empty? ? draw_empty : draw_files
       draw_buttons(@height - 4, @buttons, @selected)
-      draw_help(@height - 2, @existing ? [['Enter/q', 'close']] : HELP)
+      draw_help(@height - 2, @existing ? [['Enter/q', 'close'], ['t', 'text files']] : HELP)
       draw_existing_popup if @existing
+      draw_text_viewer if text_viewer_open?
     end
 
     # A red box over the file list, saying the show was added before.

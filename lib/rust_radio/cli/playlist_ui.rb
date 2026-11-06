@@ -126,8 +126,8 @@ module RustRadio
       target = case key
                when Curses::KEY_UP, 'k' then cursor - 1
                when Curses::KEY_DOWN, 'j' then cursor + 1
-               when Curses::KEY_PPAGE then cursor - list_rows
-               when Curses::KEY_NPAGE then cursor + list_rows
+               when *PAGE_UP_KEYS then cursor - list_rows
+               when *PAGE_DOWN_KEYS then cursor + list_rows # Space never gets here: it opens the info pop-up
                when Curses::KEY_HOME, 'g' then 0
                when Curses::KEY_END, 'G' then last
                else return

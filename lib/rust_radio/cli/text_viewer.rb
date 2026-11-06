@@ -9,7 +9,7 @@ module RustRadio
   # end of its own drawing.
   class TextViewer
     TEXT_EXTENSIONS = %w[.txt .nfo .log .md5 .ffp .st5 .cue .sfv].freeze
-    MAX_BYTES = 1_000_000 # read at most this much of a file
+    MAX_BYTES = 1_000_000
     TAB_WIDTH = 8
     HELP = [['↑/↓', 'select/scroll'], ['Tab/←/→', 'files/text'], ['f/b', 'page'], %w[Esc close]].freeze
 
@@ -72,9 +72,7 @@ module RustRadio
       screen_height - 6
     end
 
-    # --- Input ---------------------------------------------------------------
 
-    # Moves the file selection or scrolls the text, whichever has the focus.
     def move(key, page)
       case key
       when Curses::KEY_UP, 'k' then step(-1)
@@ -97,9 +95,7 @@ module RustRadio
       @cursor = index
     end
 
-    # --- Reading -------------------------------------------------------------
 
-    # The lines of +file+, decoded and with tabs expanded; cached.
     def text_lines(file)
       @texts[file] ||= read_text(File.join(@folder_path, file))
     end
@@ -146,7 +142,6 @@ module RustRadio
       lines
     end
 
-    # --- Drawing -------------------------------------------------------------
 
     def draw_files(ui, row, col, width, rows)
       ui.put(row, col + 1, 'Files', @focus == :files ? :title : :label)

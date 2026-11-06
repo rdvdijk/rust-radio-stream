@@ -25,10 +25,10 @@ module RustRadio
     HEADER_ROWS = 4 + FlacDetails::COMMON_TAGS.size
     FOOTER_ROWS = 5 # separator, buttons, separator, help, bottom border
     MIN_HEIGHT = HEADER_ROWS + FOOTER_ROWS + 2
-    LABEL_COL = 12 # where header values start
+    LABEL_COL = 12
 
-    TRACK_COL = 3 # track number
-    FILE_COL = 7 # file name
+    TRACK_COL = 3
+    FILE_COL = 7
     DETAIL_COL = 9 # title, differing tags and warnings under the file name
 
     # Characters that are normal in a song title: letters (also accented),
@@ -61,9 +61,7 @@ module RustRadio
 
     private
 
-    # --- Data ----------------------------------------------------------------
 
-    # The rows of the "already added" pop-up, read once from the database.
     def existing_summary(show)
       [['Show', show.long_title],
        ['Added', show.created_at&.localtime&.strftime('%Y-%m-%d %H:%M') || 'unknown'],
@@ -83,8 +81,6 @@ module RustRadio
       values.tally.max_by { |_value, count| count }&.first
     end
 
-    # The tags of +flac+ that differ from what most files have. An unreadable
-    # file has no tags to compare; it only shows its warning.
     def differing_tags(flac)
       return [] unless flac.readable?
 
@@ -93,8 +89,8 @@ module RustRadio
 
     # Every file becomes a few lines. A line is a list of [col, text, style]
     # segments; col :duration is the length column, just after the longest
-    # title. @file_starts holds the index
-    # of each file's first line, for the "N more" hints.
+    # title. @file_starts holds the index of each file's first line, for the
+    # "N more" hints.
     def build_lines
       @lines = []
       @file_starts = []
@@ -118,8 +114,6 @@ module RustRadio
       line
     end
 
-    # The title split into runs of expected and unexpected characters; the
-    # unexpected ones are marked so they stand out.
     def title_segments(title)
       runs = title.each_char.chunk { |char| char.match?(EXPECTED_TITLE_CHARACTER) }
       segments(DETAIL_COL, runs.map { |expected, chars| [chars.join, expected ? :value : :mark] })
@@ -141,7 +135,6 @@ module RustRadio
       segments(DETAIL_COL, parts)
     end
 
-    # --- Input ---------------------------------------------------------------
 
     # While the show is already added, only OK is offered, so Enter cancels
     # too; the file list behind the pop-up doesn't scroll.
@@ -190,7 +183,6 @@ module RustRadio
       [@lines.size - list_rows, 0].max
     end
 
-    # --- Drawing -------------------------------------------------------------
 
     def draw_screen
       @offset = @offset.clamp(0, max_offset)
@@ -200,8 +192,6 @@ module RustRadio
       @details.empty? ? draw_empty : draw_files
       draw_buttons(@height - 4, @buttons, @selected)
       draw_help(@height - 2, @existing ? [['Enter/q', 'close'], ['t', 'text files']] : HELP)
-      # A red box over the file list, saying the show was added before; the
-      # help line says how to close it.
       draw_popup(' Already added ', @existing, message: EXISTING_MESSAGE, style: :error) if @existing
       @viewer&.draw(self)
     end
@@ -219,8 +209,7 @@ module RustRadio
       FlacDetails::COMMON_TAGS.each_with_index { |tag, index| draw_common_tag(3 + index, tag, value_width) }
     end
 
-    # "Artist:  Neil Young   (2 of 14 differ)". The Date row also gets the
-    # number of shows from that year.
+    # "Artist:  Neil Young   (2 of 14 differ)"
     def draw_common_tag(row, tag, width)
       differ = @differ_counts[tag]
       note = differ.positive? ? "  (#{differ} of #{@readable.size} differ)" : ''

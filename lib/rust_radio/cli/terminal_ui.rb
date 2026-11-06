@@ -38,7 +38,7 @@ module RustRadio
       cursor_selected: [Curses::COLOR_BLACK, Curses::COLOR_CYAN],
       playing: [Curses::COLOR_GREEN, -1],
       error: [Curses::COLOR_RED, -1],
-      mark: [Curses::COLOR_BLACK, Curses::COLOR_YELLOW], # something to look at, like an odd character
+      mark: [Curses::COLOR_BLACK, Curses::COLOR_YELLOW],
       ok_selected: [Curses::COLOR_BLACK, Curses::COLOR_WHITE]
     }.freeze
 
@@ -51,8 +51,8 @@ module RustRadio
 
     POPUP_MAX_WIDTH = 76
 
-    # The screen size, as of the last draw. Public, like the drawing helpers
-    # at the bottom, for overlays such as TextViewer that draw onto this UI.
+    # Public, like the drawing helpers at the bottom, for overlays such as
+    # TextViewer that draw onto this UI.
     attr_reader :width, :height
 
     # Runs the UI until #handle_key returns a value, and returns that value.
@@ -81,7 +81,6 @@ module RustRadio
     # Called on a getch timeout (+key+ nil) or a resize, instead of #handle_key.
     def on_idle(_key); end
 
-    # --- Setup ---------------------------------------------------------------
 
     def setup
       ENV['ESCDELAY'] ||= '25' # don't wait a full second after Esc
@@ -119,7 +118,6 @@ module RustRadio
       end
     end
 
-    # --- Drawing -------------------------------------------------------------
 
     def draw
       @height = Curses.lines
@@ -155,7 +153,6 @@ module RustRadio
       put(row, 2, title, :title) if title
     end
 
-    # An empty box with +title+ in its top border, drawn over what's there.
     def draw_box(top, left, width, height, title, style_name = :title)
       put(top, left, "┌#{'─' * (width - 2)}┐", style_name)
       put(top, left + 2, truncate(title, width - 4), style_name)
@@ -195,17 +192,14 @@ module RustRadio
       end
     end
 
-    # Rows available for the list between the header and the footer.
     def list_rows
       [@height - self.class::HEADER_ROWS - self.class::FOOTER_ROWS, 1].max
     end
 
-    # The index of the last item, or 0 for an empty list; for clamping.
     def last_index(count)
       [count - 1, 0].max
     end
 
-    # "▲ N more" on the first list row and "▼ N more" on the last one.
     def draw_scroll_hints(first_row, right_col, above, below)
       { first_row => ("▲ #{above} more" if above.positive?),
         first_row + list_rows - 1 => ("▼ #{below} more" if below.positive?) }.each do |row, text|
@@ -252,7 +246,6 @@ module RustRadio
       end
     end
 
-    # --- Helpers -------------------------------------------------------------
 
     def put(row, col, text, style_name = nil)
       return if col >= @width || row >= @height || col.negative?

@@ -17,7 +17,6 @@ module RustRadio
 
     scope :in_year, ->(year) { where(date: Date.new(year).all_year) }
 
-    # Names of the playlists this show is on.
     def playlist_names
       playlists.distinct.pluck(:name)
     end

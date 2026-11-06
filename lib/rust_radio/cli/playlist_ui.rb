@@ -47,7 +47,6 @@ module RustRadio
       Curses.stdscr.timeout = REFRESH_MS
     end
 
-    # The periodic refresh, skipped while a prompt or pop-up is open.
     def on_idle(key)
       safely { reload_data } if key.nil? && !@confirm && !@popup
     end
@@ -62,7 +61,6 @@ module RustRadio
       [record.errors.full_messages.join(' '), :error]
     end
 
-    # --- Data ----------------------------------------------------------------
 
     def reload_data
       selected_ids = SIDES.to_h { |side| [side, selected_item(side)&.id] }
@@ -74,7 +72,6 @@ module RustRadio
       SIDES.each { |side| restore_cursor(side, selected_ids[side]) }
     end
 
-    # Keep the same item selected; if it's gone, stay at the same position.
     def restore_cursor(side, selected_id)
       index = @items[side].index { |item| item.id == selected_id }
       @cursor[side] = (index || @cursor[side]).clamp(0, last_index(@items[side].size))
@@ -88,13 +85,12 @@ module RustRadio
       item.is_a?(PlaylistEntry) ? item.show : item
     end
 
-    # --- Input ---------------------------------------------------------------
 
     def handle_key(key)
       if @confirm
         answer_confirm(key)
       elsif @popup
-        @popup = nil # any key closes the pop-up, without doing anything else
+        @popup = nil
       elsif QUIT_KEYS.include?(key)
         return :quit
       else
@@ -136,7 +132,6 @@ module RustRadio
       @cursor[@active] = target.clamp(0, last)
     end
 
-    # --- Actions -------------------------------------------------------------
 
     def move_selected
       item = selected_item
@@ -155,9 +150,7 @@ module RustRadio
       @message = entry.destroy ? ["Removed from the playlist: #{entry.show_title}", :playing] : error_message(entry)
     end
 
-    # --- Show info pop-up ----------------------------------------------------
 
-    # The details are collected once, when the pop-up opens.
     def open_popup
       item = selected_item
       return unless item
@@ -174,7 +167,6 @@ module RustRadio
        ['Added', show.created_at&.strftime('%Y-%m-%d')]].reject { |_label, value| value.blank? }
     end
 
-    # Extra rows for a show on the playlist: its position, and what's playing.
     def entry_info(item)
       return [] unless item.is_a?(PlaylistEntry)
 
@@ -186,7 +178,6 @@ module RustRadio
       rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}", (:playing if @playlist.online?)]
     end
 
-    # k/j move the selected entry one up/down, g/G to the top/bottom.
     def reorder_selected(key)
       entry = selected_item&.reload
       return unless entry
@@ -226,7 +217,6 @@ module RustRadio
       @confirm = { question: "#{question} [y/N]", action: action, block: block }
     end
 
-    # Any key other than y cancels.
     def answer_confirm(key)
       confirm = @confirm
       @confirm = nil
@@ -242,7 +232,6 @@ module RustRadio
       reload_data
     end
 
-    # --- Drawing -------------------------------------------------------------
 
     # The column of the line between the two panels.
     def split

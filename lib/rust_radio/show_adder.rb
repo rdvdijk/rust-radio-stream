@@ -37,7 +37,6 @@ module RustRadio
       nil
     end
 
-    # The date of the show, from its info file; nil if it can't be read.
     def self.show_date(folder_path)
       read_info(folder_path)&.dig(:date)
     end

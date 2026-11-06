@@ -41,9 +41,11 @@ module RustRadio
       read_info(folder_path)&.dig(:date)
     end
 
-    def add(folder_path, playlist_name)
+    # +notes+: free text saved with the show, for example why it was added.
+    def add(folder_path, playlist_name, notes: nil)
       @folder_path = folder_path
       @playlist_name = playlist_name
+      @notes = notes
 
       begin
         Show.transaction do |_t|
@@ -82,6 +84,7 @@ module RustRadio
 
       { folder_path: @folder_path,
         **info.slice(:artist, :date, :venue, :city_state, :festival),
+        notes: @notes,
         info_file: info[:lines].join('\n'),
         setlist_identifier: "#{info[:date_text].gsub(/[^\d]/, '')}0" }
     end

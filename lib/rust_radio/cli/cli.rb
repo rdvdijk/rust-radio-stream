@@ -12,9 +12,10 @@ module RustRadio
       raise Thor::MalformattedArgumentError, "#{path} is not a directory." unless File.directory?(path)
 
       path = File.expand_path(path) # for display and logging; Show normalizes folder_path itself
-      if add_show_ui(path).run == :add
+      ui = add_show_ui(path)
+      if ui.run == :add
         RustRadio.logger.info("Adding folder: #{path}")
-        RustRadio::ShowAdder.new.add(path, options['playlist'])
+        RustRadio::ShowAdder.new.add(path, options['playlist'], notes: ui.notes)
       else
         RustRadio.logger.info("Cancelled adding folder: #{path}")
       end

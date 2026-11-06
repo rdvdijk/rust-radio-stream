@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rust_radio/cli/terminal_ui'
+require 'rust_radio/cli/text_input'
 
 module RustRadio
   # Full-screen terminal UI to manage a playlist: the shows on the playlist on
@@ -16,8 +17,11 @@ module RustRadio
     MIN_WIDTH = 60
 
     REFRESH_MS = 2000 # reload periodically, the radio changes the playlist as it plays
-    DELETE_KEYS = ['d', 'D', Curses::KEY_DC].freeze
-    SHUFFLE_KEYS = %w[s S].freeze
+    # Keys that run an action whichever side is active.
+    ACTIONS = {
+      'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, 'n' => :edit_notes,
+      's' => :ask_shuffle, 'S' => :ask_shuffle, 'd' => :ask_delete, 'D' => :ask_delete, Curses::KEY_DC => :ask_delete
+    }.freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
     REORDER_KEYS = %w[k j g G].freeze
     # Space opens the info pop-up here, so it doesn't page.
@@ -48,7 +52,7 @@ module RustRadio
     end
 
     def on_idle(key)
-      safely { reload_data } if key.nil? && !@confirm && !@popup
+      safely { reload_data } if key.nil? && !@confirm && !@popup && !@input
     end
 
     def safely
@@ -85,7 +89,9 @@ module RustRadio
     end
 
     def handle_key(key)
-      if @confirm
+      if @input
+        answer_input(key)
+      elsif @confirm
         answer_confirm(key)
       elsif @popup
         @popup = nil
@@ -99,18 +105,16 @@ module RustRadio
     end
 
     def perform(key)
+      return send(ACTIONS[key]) if ACTIONS.key?(key)
+
       case key
-      when 'r', 'R' then reload_data
       when *TAB_KEYS, Curses::KEY_BTAB then @active = @active == :left ? :right : :left
       when Curses::KEY_LEFT then @active = :left
       when Curses::KEY_RIGHT then @active = :right
       when *ENTER_KEYS then move_selected
-      when ' ' then open_popup
       when 'l' then move_selected if @active == :left # left → right: remove from playlist
       when 'h' then move_selected if @active == :right # right → left: add to playlist
       when *REORDER_KEYS then @active == :left ? reorder_selected(key) : move_cursor(key)
-      when *SHUFFLE_KEYS then ask_shuffle
-      when *DELETE_KEYS then ask_delete
       else move_cursor(key)
       end
     end
@@ -156,7 +160,7 @@ module RustRadio
     end
 
     def show_info(show)
-      [['Venue', show.venue], ['City', show.city_state], ['Festival', show.festival],
+      [['Notes', show.notes], ['Venue', show.venue], ['City', show.city_state], ['Festival', show.festival],
        ['Length', format_length(show.length.to_i)], ['Songs', show.songs.count.to_s],
        ['Folder', show.folder_path, :value, :start], ['Playlists', show.playlist_summary],
        ['Last played', show.last_played_at&.strftime('%Y-%m-%d %H:%M')],
@@ -196,6 +200,25 @@ module RustRadio
         reload_data
         @message = ['Shuffled the playlist.', :playing]
       end
+    end
+
+    def edit_notes
+      show = selected_item && show_of(selected_item)
+      return unless show
+
+      @input = TextInput.new(" Notes: #{show.long_title} ", show.notes)
+      @input_show = show
+    end
+
+    def answer_input(key)
+      result = @input.handle_key(key)
+      if result == :save
+        safely do
+          @input_show.update!(notes: @input.text.presence)
+          @message = ["Saved the notes for #{@input_show.long_title}", :playing]
+        end
+      end
+      @input = nil if result
     end
 
     def ask_delete
@@ -242,6 +265,7 @@ module RustRadio
       draw_status
       draw_help(@height - 2, help_items)
       draw_popup(@popup[:title], @popup[:rows], hint: 'press any key to close') if @popup
+      @input&.draw(self)
     end
 
     def draw_header
@@ -333,10 +357,11 @@ module RustRadio
       return [['y', @confirm[:action]], ['any other key', 'cancel']] if @confirm
 
       if @active == :left
-        [['Tab/←/→', 'side'], ['Enter/l', 'remove'], %w[j/k move], ['g/G', 'top/bottom'], %w[Space info],
-         %w[s shuffle], %w[q quit]]
+        [['Tab/←/→', 'side', 'Tab'], ['Enter/l', 'remove', 'l'], %w[j/k move], ['g/G', 'top/bottom'],
+         %w[Space info], %w[n notes], %w[q quit], %w[s shuffle]]
       else
-        [['Tab/←/→', 'side'], ['Enter/h', 'add'], %w[Space info], %w[d delete], %w[s shuffle], %w[q quit]]
+        [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[n notes], %w[d delete], %w[q quit],
+         %w[s shuffle]]
       end
     end
 

@@ -4,6 +4,7 @@ require 'rust_radio/cli/terminal_ui'
 require 'rust_radio/flac_details'
 require 'rust_radio/show_adder'
 require 'rust_radio/cli/text_viewer'
+require 'rust_radio/cli/text_input'
 
 module RustRadio
   # Full-screen terminal UI that lists the FLAC files of a show folder, with
@@ -14,15 +15,17 @@ module RustRadio
   # a file only lists them when it differs.
   class AddShowUI < TerminalUI
     TITLE = ' Rust Radio · Add show '
-    HELP = [['↑/↓', 'scroll'], ['f/b', 'page'], ['←/→/Tab', 'select', 'Tab'], %w[Enter confirm],
-            ['t', 'text files'], ['q/Esc', 'cancel', 'q']].freeze
+    # Items that don't fit are left out from the end, so the least needed comes last.
+    HELP = [['↑/↓', 'scroll'], ['←/→/Tab', 'select', 'Tab'], %w[Enter confirm], %w[n note], %w[t texts],
+            ['q/Esc', 'cancel', 'q'], ['f/b', 'page']].freeze
     TEXT_VIEWER_KEY = 't'
+    NOTES_KEY = 'n'
     BUTTON_LABELS = { add: 'Add show', cancel: 'Cancel', ok: 'OK' }.freeze
     TAG_LABELS = { 'ARTIST' => 'Artist', 'ALBUM' => 'Album', 'DATE' => 'Date' }.freeze
     EXISTING_MESSAGE = ['This show is already in the database,', "and can't be added a second time."].freeze
 
     # top border, folder, playlist, one row per common tag, list separator
-    HEADER_ROWS = 4 + FlacDetails::COMMON_TAGS.size
+    HEADER_ROWS = 5 + FlacDetails::COMMON_TAGS.size
     FOOTER_ROWS = 5 # separator, buttons, separator, help, bottom border
     MIN_HEIGHT = HEADER_ROWS + FOOTER_ROWS + 2
     LABEL_COL = 12
@@ -44,6 +47,7 @@ module RustRadio
       super()
       @year_count = year_count
       @existing = existing_show && existing_summary(existing_show)
+      @notes = existing_show&.notes
       @folder_path = folder_path
       @playlist_name = playlist_name
       @details = flac_files.map { |file| FlacDetails.new(folder_path, file) }
@@ -55,6 +59,9 @@ module RustRadio
       @selected = 0
       @offset = 0
     end
+
+    # The note typed for the show, for example why it's added; nil if none.
+    attr_reader :notes
 
     private
 
@@ -142,16 +149,25 @@ module RustRadio
     # While the show is already added, only OK is offered, so Enter cancels
     # too; the file list behind the pop-up doesn't scroll.
     def handle_key(key)
-      if @viewer
-        @viewer = nil if @viewer.handle_key(key, @height) == :close
-        return nil
-      end
+      return handle_overlay_key(key) if @viewer || @input
 
       case key
       when TEXT_VIEWER_KEY then open_text_viewer
+      when NOTES_KEY then @input = TextInput.new(' Notes: why this show is added ', @notes) unless @existing
       when *ENTER_KEYS then return @buttons.keys[@selected] == :add ? :add : :cancel
       when *QUIT_KEYS then return :cancel
       else navigate(key) unless @existing
+      end
+      nil
+    end
+
+    def handle_overlay_key(key)
+      if @viewer
+        @viewer = nil if @viewer.handle_key(key, @height) == :close
+      else
+        result = @input.handle_key(key)
+        @notes = @input.text.presence if result == :save
+        @input = nil if result
       end
       nil
     end
@@ -196,6 +212,7 @@ module RustRadio
       draw_help(@height - 2, @existing ? [['Enter/q', 'close'], ['t', 'text files']] : HELP)
       draw_popup(' Already added ', @existing, message: EXISTING_MESSAGE, style: :error) if @existing
       @viewer&.draw(self)
+      @input&.draw(self)
     end
 
     def list_title
@@ -208,7 +225,15 @@ module RustRadio
       put(1, LABEL_COL, truncate_left(@folder_path, value_width), :value)
       put(2, 2, 'Playlist:', :label)
       put(2, LABEL_COL, truncate(@playlist_name, value_width), :highlight)
-      FlacDetails::COMMON_TAGS.each_with_index { |tag, index| draw_common_tag(3 + index, tag, value_width) }
+      draw_notes(3, value_width)
+      FlacDetails::COMMON_TAGS.each_with_index { |tag, index| draw_common_tag(4 + index, tag, value_width) }
+    end
+
+    def draw_notes(row, width)
+      put(row, 2, 'Notes:', :label)
+      return put(row, LABEL_COL, truncate(@notes, width), :value) if @notes
+
+      put(row, LABEL_COL, @existing ? '(none)' : '(none yet; press n to add why this show is added)', :label)
     end
 
     # "Artist:  Neil Young   (2 of 14 differ)"

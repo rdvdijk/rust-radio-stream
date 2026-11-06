@@ -61,7 +61,7 @@ module RustRadio
       setup
       loop do
         draw
-        key = Curses.getch
+        key = Curses.get_char # unlike getch, returns a typed é as one character
         if key.nil? || key == Curses::KEY_RESIZE
           on_idle(key)
           next

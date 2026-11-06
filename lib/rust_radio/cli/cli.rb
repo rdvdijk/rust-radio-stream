@@ -15,8 +15,11 @@ module RustRadio
       # "/music/show" are all recognised as the same folder.
       path = File.expand_path(path)
       existing_show = RustRadio::Show.find_by(folder_path: path)
+      date = RustRadio::ShowAdder.show_date(path)
+      year_count = date && [date.year, RustRadio::Show.in_year(date.year).count]
       flac_files = RustRadio::ShowAdder.flac_files(path)
-      ui = RustRadio::AddShowUI.new(path, options['playlist'], flac_files, existing_show: existing_show)
+      ui = RustRadio::AddShowUI.new(path, options['playlist'], flac_files,
+                                    existing_show: existing_show, year_count: year_count)
       if ui.run == :add
         RustRadio.logger.info("Adding folder: #{path}")
         RustRadio::ShowAdder.new.add(path, options['playlist'])

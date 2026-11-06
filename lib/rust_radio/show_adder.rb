@@ -10,6 +10,24 @@ module RustRadio
       Dir.children(folder_path).grep(/\.flac$/).sort
     end
 
+    # The info file of a show folder (artist, date, venue, city, festival, one
+    # per line), or nil if there is none.
+    def self.info_file(folder_path)
+      Dir.children(folder_path).reverse.find do |entry|
+        entry =~ /\.txt$/ && entry !~ /orig/ && entry !~ /ffp/
+      end
+    end
+
+    # The date of the show, from its info file; nil if it can't be read.
+    def self.show_date(folder_path)
+      file = info_file(folder_path)
+      return unless file
+
+      Date.parse(File.readlines(File.join(folder_path, file), chomp: true)[1].to_s)
+    rescue Date::Error
+      nil
+    end
+
     def add(folder_path, playlist_name)
       @folder_path = folder_path
       @playlist_name = playlist_name
@@ -29,9 +47,7 @@ module RustRadio
 
     def collect_files
       @flac_files = self.class.flac_files(@folder_path)
-      @info_file = Dir.children(@folder_path).reverse.find do |entry|
-        entry =~ /\.txt$/ && entry !~ /orig/ && entry !~ /ffp/
-      end
+      @info_file = self.class.info_file(@folder_path)
       raise "Could not find files in #{@folder_path}" if @flac_files.empty? || !@info_file
     end
 

@@ -12,6 +12,8 @@ module RustRadio
 
     validates_uniqueness_of :folder_path
 
+    scope :in_year, ->(year) { where(date: Date.new(year, 1, 1)..Date.new(year, 12, 31)) }
+
     # Names of the playlists this show is on.
     def playlist_names
       playlists.distinct.pluck(:name)

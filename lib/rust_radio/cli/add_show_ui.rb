@@ -33,8 +33,12 @@ module RustRadio
 
     # +existing_show+: the Show already added from this folder, if any. The
     # screen then explains that it can't be added again and only offers OK.
-    def initialize(folder_path, playlist_name, flac_files, existing_show: nil)
+    #
+    # +year_count+: [year, number of shows from that year already in the
+    # database], or nil if the show's date is unknown.
+    def initialize(folder_path, playlist_name, flac_files, existing_show: nil, year_count: nil)
       super()
+      @year_count = year_count
       @existing = existing_show && existing_summary(existing_show)
       @folder_path = folder_path
       @playlist_name = playlist_name
@@ -218,7 +222,8 @@ module RustRadio
       FlacDetails::COMMON_TAGS.each_with_index { |tag, index| draw_common_tag(3 + index, tag, value_width) }
     end
 
-    # "Artist:  Neil Young   (2 of 14 differ)"
+    # "Artist:  Neil Young   (2 of 14 differ)". The Date row also gets the
+    # number of shows from that year.
     def draw_common_tag(row, tag, width)
       differ = @differ_counts[tag]
       note = differ.positive? ? "  (#{differ} of #{@readable.size} differ)" : ''
@@ -227,6 +232,20 @@ module RustRadio
       put(row, 2, "#{TAG_LABELS[tag]}:", :label)
       put(row, LABEL_COL, value, @defaults[tag] ? :value : :label)
       put(row, LABEL_COL + value.length, note, :highlight)
+      draw_line(row, year_segments(LABEL_COL + value.length + note.length), @width - 1) if tag == 'DATE'
+    end
+
+    # " · 3 shows from 2016 already in the database", starting at +col+. The
+    # year is the one in the info file, which is the date the show is saved with.
+    def year_segments(col)
+      return [[col, ' · year unknown (no date in the info file)', :label]] unless @year_count
+
+      year, count = @year_count
+      return [[col, ' · ', :label], [col + 3, "no shows from #{year} in the database yet", :playing]] if count.zero?
+
+      number = "#{count} #{count == 1 ? 'show' : 'shows'}"
+      [[col, ' · ', :label], [col + 3, number, :highlight],
+       [col + 3 + number.length, " from #{year} already in the database", :label]]
     end
 
     def draw_files

@@ -44,9 +44,6 @@ module RustRadio
       current_song.zero?
     end
 
-    # Called as each song starts playing. The first song is the start of the
-    # show, which is when the show was last played. (After a restart in the
-    # middle of a show, it carries on from a later song and keeps that time.)
     def mark_start_of_song!
       now = Time.now
       transaction do

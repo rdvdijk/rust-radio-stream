@@ -13,6 +13,7 @@ gem 'acts_as_list', require: false
 gem 'pg'
 
 gem 'curses'
+gem 'rake' # also on the server, where deploys run `rake db:migrate`
 gem 'thor'
 
 gem 'haml'

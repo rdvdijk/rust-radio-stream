@@ -54,5 +54,19 @@ namespace :deploy do
     end
   end
 
+  # Runs after the new release is checked out, bundled and linked to the
+  # shared config, but before it goes live and the services restart, so they
+  # never run code whose migrations haven't run yet. Migrations that already
+  # ran are skipped.
+  desc 'Run database migrations'
+  task :migrate do
+    on roles(:db) do
+      within release_path do
+        execute :bundle, :exec, :rake, 'db:migrate'
+      end
+    end
+  end
+
+  after :updated, :migrate
   after :publishing, :restart
 end

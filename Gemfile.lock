@@ -188,6 +188,7 @@ DEPENDENCIES
   puma
   rack-ssl-enforcer
   rackup
+  rake
   rrd-ffi
   rubocop (~> 1.92)
   rubocop-rake (~> 0.7)

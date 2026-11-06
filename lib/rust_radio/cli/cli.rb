@@ -11,9 +11,7 @@ module RustRadio
       raise Thor::MalformattedArgumentError, "#{path} does not exist." unless File.exist?(path)
       raise Thor::MalformattedArgumentError, "#{path} is not a directory." unless File.directory?(path)
 
-      # Shows are stored by absolute path, so "./show", "show/" and
-      # "/music/show" are all recognised as the same folder.
-      path = File.expand_path(path)
+      path = File.expand_path(path) # for display and logging; Show normalizes folder_path itself
       existing_show = RustRadio::Show.find_by(folder_path: path)
       date = RustRadio::ShowAdder.show_date(path)
       year_count = date && [date.year, RustRadio::Show.in_year(date.year).count]

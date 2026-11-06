@@ -18,14 +18,28 @@ module RustRadio
       end
     end
 
-    # The date of the show, from its info file; nil if it can't be read.
-    def self.show_date(folder_path)
+    INFO_FIELDS = %i[artist date_text venue city_state festival].freeze
+
+    # The fields of a show's info file, plus :lines (all of them) and :date
+    # (parsed from :date_text, nil if it isn't a date). Nil without an info file.
+    def self.read_info(folder_path)
       file = info_file(folder_path)
       return unless file
 
-      Date.parse(File.readlines(File.join(folder_path, file), chomp: true)[1].to_s)
+      lines = File.readlines(File.join(folder_path, file), chomp: true)
+      info = INFO_FIELDS.zip(lines).to_h
+      info.merge(lines: lines, date: parse_date(info[:date_text]))
+    end
+
+    def self.parse_date(text)
+      Date.parse(text.to_s)
     rescue Date::Error
       nil
+    end
+
+    # The date of the show, from its info file; nil if it can't be read.
+    def self.show_date(folder_path)
+      read_info(folder_path)&.dig(:date)
     end
 
     def add(folder_path, playlist_name)
@@ -64,17 +78,13 @@ module RustRadio
     end
 
     def show_attributes
-      lines = File.readlines(File.join(@folder_path, @info_file), chomp: true)
-      artist, date, venue, city_state, festival = lines
+      info = self.class.read_info(@folder_path)
+      raise "Can't read the date '#{info[:date_text]}' in #{@info_file}" unless info[:date]
 
       { folder_path: @folder_path,
-        artist: artist,
-        date: Date.parse(date),
-        city_state: city_state,
-        venue: venue,
-        festival: festival,
-        info_file: lines.join('\n'),
-        setlist_identifier: "#{date.gsub(/[^\d]/, '')}0" }
+        **info.slice(:artist, :date, :venue, :city_state, :festival),
+        info_file: info[:lines].join('\n'),
+        setlist_identifier: "#{info[:date_text].gsub(/[^\d]/, '')}0" }
     end
 
     def add_songs

@@ -13,12 +13,9 @@ module RustRadio
   # The tags most files share (artist, album, date) are shown once at the top;
   # a file only lists them when it differs.
   class AddShowUI < TerminalUI
-    include TextViewer
-
     TITLE = ' Rust Radio · Add show '
-    # ←/→ also select a button and Esc also cancels; they're left out to fit 80 columns.
-    HELP = [['↑/↓', 'scroll'], ['f/b', 'page'], %w[Tab select], %w[Enter confirm], ['t', 'text files'],
-            %w[q cancel]].freeze
+    HELP = [['↑/↓', 'scroll'], ['f/b', 'page'], ['←/→/Tab', 'select', 'Tab'], %w[Enter confirm],
+            ['t', 'text files'], ['q/Esc', 'cancel', 'q']].freeze
     TEXT_VIEWER_KEY = 't'
     BUTTON_LABELS = { add: 'Add show', cancel: 'Cancel', ok: 'OK' }.freeze
     TAG_LABELS = { 'ARTIST' => 'Artist', 'ALBUM' => 'Album', 'DATE' => 'Date' }.freeze
@@ -70,7 +67,16 @@ module RustRadio
     def existing_summary(show)
       [['Show', show.long_title],
        ['Added', show.created_at&.localtime&.strftime('%Y-%m-%d %H:%M') || 'unknown'],
-       ['Playlists', show.playlist_names.join(', ').presence || 'none']]
+       ['Playlists', show.playlist_summary]]
+    end
+
+    # [[text, style], ...] → segments placed one after another from +col+.
+    def segments(col, parts)
+      parts.map do |text, style|
+        segment = [col, text, style]
+        col += text.length
+        segment
+      end
     end
 
     def most_common(values)
@@ -115,13 +121,8 @@ module RustRadio
     # The title split into runs of expected and unexpected characters; the
     # unexpected ones are marked so they stand out.
     def title_segments(title)
-      col = DETAIL_COL
-      title.each_char.chunk { |char| char.match?(EXPECTED_TITLE_CHARACTER) }.map do |expected, chars|
-        text = chars.join
-        segment = [col, text, expected ? :value : :mark]
-        col += text.length
-        segment
-      end
+      runs = title.each_char.chunk { |char| char.match?(EXPECTED_TITLE_CHARACTER) }
+      segments(DETAIL_COL, runs.map { |expected, chars| [chars.join, expected ? :value : :mark] })
     end
 
     def title_width
@@ -132,35 +133,36 @@ module RustRadio
       @duration_width ||= @details.map { |flac| flac.length ? format_duration(flac.length).length : 0 }.max.to_i
     end
 
+    # "Artist: Crazy Horse   Album: Encore"
     def differences_line(flac)
-      col = DETAIL_COL
-      differing_tags(flac).flat_map do |tag|
-        label = "#{TAG_LABELS[tag]}: "
-        value = flac[tag] || '(not set)'
-        segments = [[col, label, :label], [col + label.length, value, :highlight]]
-        col += label.length + value.length + 3
-        segments
+      parts = differing_tags(flac).each_with_index.flat_map do |tag, index|
+        [*([['   ', nil]] unless index.zero?), ["#{TAG_LABELS[tag]}: ", :label], [flac[tag] || '(not set)', :highlight]]
       end
+      segments(DETAIL_COL, parts)
     end
 
     # --- Input ---------------------------------------------------------------
 
+    # While the show is already added, only OK is offered, so Enter cancels
+    # too; the file list behind the pop-up doesn't scroll.
     def handle_key(key)
-      return text_viewer_key(key) if text_viewer_open?
-
-      if key == TEXT_VIEWER_KEY
-        open_text_viewer(@folder_path, info_file: ShowAdder.info_file(@folder_path))
+      if @viewer
+        @viewer = nil if @viewer.handle_key(key, @height) == :close
         return nil
       end
-      return (ENTER_KEYS + QUIT_KEYS).include?(key) ? :cancel : nil if @existing
 
       case key
-      when *ENTER_KEYS then @buttons.keys[@selected] == :add ? :add : :cancel
-      when *QUIT_KEYS then :cancel
-      else
-        navigate(key)
-        nil
+      when TEXT_VIEWER_KEY then open_text_viewer
+      when *ENTER_KEYS then return @buttons.keys[@selected] == :add ? :add : :cancel
+      when *QUIT_KEYS then return :cancel
+      else navigate(key) unless @existing
       end
+      nil
+    end
+
+    def open_text_viewer
+      @viewer = TextViewer.new(@folder_path, info_file: ShowAdder.info_file(@folder_path),
+                                             close_keys: [TEXT_VIEWER_KEY])
     end
 
     def navigate(key)
@@ -198,29 +200,10 @@ module RustRadio
       @details.empty? ? draw_empty : draw_files
       draw_buttons(@height - 4, @buttons, @selected)
       draw_help(@height - 2, @existing ? [['Enter/q', 'close'], ['t', 'text files']] : HELP)
-      draw_existing_popup if @existing
-      draw_text_viewer if text_viewer_open?
-    end
-
-    # A red box over the file list, saying the show was added before.
-    def draw_existing_popup
-      label_width = @existing.map { |label, _value| label.length }.max + 2
-      content = (EXISTING_MESSAGE.map(&:length) + @existing.map { |_label, value| label_width + value.length }).max
-      width = [content + 6, @width - 4].min
-      # borders, a blank line above and below the message, one above the hint, and the hint
-      height = EXISTING_MESSAGE.size + @existing.size + 6
-      top = [(@height - height) / 2, 1].max
-      left = (@width - width) / 2
-
-      draw_box(top, left, width, height, ' Already added ', :error)
-      EXISTING_MESSAGE.each_with_index { |line, index| put(top + 2 + index, left + 3, line, :value) }
-      @existing.each_with_index do |(label, value), index|
-        row = top + 3 + EXISTING_MESSAGE.size + index
-        put(row, left + 3, label, :label)
-        put(row, left + 3 + label_width, truncate(value, width - 6 - label_width))
-      end
-      hint = 'press Enter or q to close'
-      put(top + height - 2, left + width - 3 - hint.length, hint, :help)
+      # A red box over the file list, saying the show was added before; the
+      # help line says how to close it.
+      draw_popup(' Already added ', @existing, message: EXISTING_MESSAGE, style: :error) if @existing
+      @viewer&.draw(self)
     end
 
     def list_title
@@ -252,14 +235,15 @@ module RustRadio
     # " · 3 shows from 2016 already in the database", starting at +col+. The
     # year is the one in the info file, which is the date the show is saved with.
     def year_segments(col)
-      return [[col, ' · year unknown (no date in the info file)', :label]] unless @year_count
+      return segments(col, [[' · year unknown (no date in the info file)', :label]]) unless @year_count
 
       year, count = @year_count
-      return [[col, ' · ', :label], [col + 3, "no shows from #{year} in the database yet", :playing]] if count.zero?
-
-      number = "#{count} #{count == 1 ? 'show' : 'shows'}"
-      [[col, ' · ', :label], [col + 3, number, :highlight],
-       [col + 3 + number.length, " from #{year} already in the database", :label]]
+      parts = if count.zero?
+                [["no shows from #{year} in the database yet", :playing]]
+              else
+                [["#{count} #{count == 1 ? 'show' : 'shows'}", :highlight], [" from #{year} already in the database", :label]]
+              end
+      segments(col, [[' · ', :label], *parts])
     end
 
     def draw_files

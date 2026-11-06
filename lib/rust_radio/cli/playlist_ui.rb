@@ -20,7 +20,8 @@ module RustRadio
     SHUFFLE_KEYS = %w[s S].freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
     REORDER_KEYS = %w[k j g G].freeze
-    POPUP_MAX_WIDTH = 76
+    # Space opens the info pop-up here, so it doesn't page.
+    PAGE_DOWN_KEYS = (TerminalUI::PAGE_DOWN_KEYS - [' ']).freeze
 
     def initialize(playlist)
       super()
@@ -127,7 +128,7 @@ module RustRadio
                when Curses::KEY_UP, 'k' then cursor - 1
                when Curses::KEY_DOWN, 'j' then cursor + 1
                when *PAGE_UP_KEYS then cursor - list_rows
-               when *PAGE_DOWN_KEYS then cursor + list_rows # Space never gets here: it opens the info pop-up
+               when *PAGE_DOWN_KEYS then cursor + list_rows
                when Curses::KEY_HOME, 'g' then 0
                when Curses::KEY_END, 'G' then last
                else return
@@ -168,7 +169,7 @@ module RustRadio
     def show_info(show)
       [['Venue', show.venue], ['City', show.city_state], ['Festival', show.festival],
        ['Length', format_length(show.length.to_i)], ['Songs', show.songs.count.to_s],
-       ['Folder', show.folder_path], ['Playlists', show.playlist_names.join(', ').presence || 'none'],
+       ['Folder', show.folder_path, :value, :start], ['Playlists', show.playlist_summary],
        ['Last played', show.last_played_at&.strftime('%Y-%m-%d %H:%M')],
        ['Added', show.created_at&.strftime('%Y-%m-%d')]].reject { |_label, value| value.blank? }
     end
@@ -182,7 +183,7 @@ module RustRadio
 
       song = item.song_to_play
       label = @playlist.online? ? 'Now playing' : 'Next song'
-      rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}"]
+      rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}", (:playing if @playlist.online?)]
     end
 
     # k/j move the selected entry one up/down, g/G to the top/bottom.
@@ -255,32 +256,7 @@ module RustRadio
       SIDES.each { |side| draw_panel(side) }
       draw_status
       draw_help(@height - 2, help_items)
-      draw_popup if @popup
-    end
-
-    # A box centered on the screen, drawn over the panels.
-    def draw_popup
-      label_width = @popup[:rows].map { |label, _value| label.length }.max + 2
-      longest = @popup[:rows].map { |label, value| label_width + value.length }.max
-      max_width = [POPUP_MAX_WIDTH, @width - 4].min
-      width = (longest + 4).clamp([@popup[:title].length + 6, max_width].min, max_width)
-      height = [@popup[:rows].size + 4, @height - 2].min
-      top = (@height - height) / 2
-      left = (@width - width) / 2
-
-      draw_box(top, left, width, height, @popup[:title])
-      @popup[:rows].first(height - 4).each_with_index do |(label, value), index|
-        draw_popup_row(top + 1 + index, left + 2, width - 4, label_width, label, value)
-      end
-      hint = 'press any key to close'
-      put(top + height - 2, left + width - 2 - hint.length, hint, :help)
-    end
-
-    def draw_popup_row(row, col, width, label_width, label, value)
-      value_width = width - label_width
-      value = label == 'Folder' ? truncate_left(value, value_width) : truncate(value, value_width)
-      put(row, col, label, :label)
-      put(row, col + label_width, value, label == 'Now playing' ? :playing : :value)
+      draw_popup(@popup[:title], @popup[:rows], hint: 'press any key to close') if @popup
     end
 
     def draw_header

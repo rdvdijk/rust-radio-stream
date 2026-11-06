@@ -10,13 +10,21 @@ module RustRadio
     has_many :playlist_entries
     has_many :playlists, through: :playlist_entries
 
+    # Stored as an absolute path, also in lookups, so "./show", "show/" and
+    # "/music/show" are the same folder to the uniqueness check and find_by.
+    normalizes :folder_path, with: ->(path) { File.expand_path(path) }
     validates_uniqueness_of :folder_path
 
-    scope :in_year, ->(year) { where(date: Date.new(year, 1, 1)..Date.new(year, 12, 31)) }
+    scope :in_year, ->(year) { where(date: Date.new(year).all_year) }
 
     # Names of the playlists this show is on.
     def playlist_names
       playlists.distinct.pluck(:name)
+    end
+
+    # "Default, Other", or "none".
+    def playlist_summary
+      playlist_names.join(', ').presence || 'none'
     end
 
     def get(index)

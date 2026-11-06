@@ -11,8 +11,13 @@ module RustRadio
       raise Thor::MalformattedArgumentError, "#{path} does not exist." unless File.exist?(path)
       raise Thor::MalformattedArgumentError, "#{path} is not a directory." unless File.directory?(path)
 
-      puts "Adding folder: #{path}"
-      RustRadio::ShowAdder.new.add(path, options['playlist'])
+      flac_files = RustRadio::ShowAdder.flac_files(path)
+      if RustRadio::AddShowUI.new(path, options['playlist'], flac_files).run == :add
+        RustRadio.logger.info("Adding folder: #{path}")
+        RustRadio::ShowAdder.new.add(path, options['playlist'])
+      else
+        RustRadio.logger.info("Cancelled adding folder: #{path}")
+      end
     end
 
     desc 'clear', "Remove all shows (just don't!)."

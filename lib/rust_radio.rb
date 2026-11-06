@@ -1,7 +1,19 @@
 # frozen_string_literal: true
+require 'logger'
 
 # Main Rust Radio module
 module RustRadio
+  class << self
+    attr_writer :logger
+
+    def logger
+      $stdout.sync = true
+      @logger ||= Logger.new($stdout).tap do |log|
+        log.level = Logger::INFO
+      end
+    end
+  end
+
   require 'rust_radio/db'
 
   require 'rust_radio/streamer'
@@ -25,6 +37,7 @@ module RustRadio
 
   require 'rust_radio/show_adder'
 
+  require 'rust_radio/cli/add_show_ui'
   require 'rust_radio/cli/cli'
 
   require 'rust_radio/web/ui'

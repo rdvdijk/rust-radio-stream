@@ -5,6 +5,11 @@ require 'flacinfo'
 module RustRadio
   # Used to add FLAC shows to the database
   class ShowAdder
+    # The FLAC files in a folder, in the order they will be added as songs.
+    def self.flac_files(folder_path)
+      Dir.children(folder_path).grep(/\.flac$/).sort
+    end
+
     def add(folder_path, playlist_name)
       @folder_path = folder_path
       @playlist_name = playlist_name
@@ -18,16 +23,14 @@ module RustRadio
           add_to_playlist
         end
       rescue StandardError => e
-        puts "ERROR: #{e}"
+        RustRadio.logger.error("ERROR: #{e}")
       end
     end
 
     def collect_files
-      @flac_files = []
-      @info_file = nil
-      Dir.foreach(@folder_path) do |entry|
-        @flac_files << entry if entry =~ /\.flac$/
-        @info_file = entry if entry =~ /\.txt$/ && entry !~ /orig/ && entry !~ /ffp/
+      @flac_files = self.class.flac_files(@folder_path)
+      @info_file = Dir.children(@folder_path).reverse.find do |entry|
+        entry =~ /\.txt$/ && entry !~ /orig/ && entry !~ /ffp/
       end
       raise "Could not find files in #{@folder_path}" if @flac_files.empty? || !@info_file
     end
@@ -36,11 +39,11 @@ module RustRadio
       @show = Show.new(show_attributes)
 
       unless @show.valid?
-        puts "Could not add show: #{@show.errors.full_messages.join(',')}"
+        RustRadio.logger.info("Could not add show: #{@show.errors.full_messages.join(',')}")
         raise 'Show has already been added (?).'
       end
 
-      puts "Adding show: #{@show.date} : #{@show.artist} @ #{@show.city_state}"
+      RustRadio.logger.info("Adding show: #{@show.date} : #{@show.artist} @ #{@show.city_state}")
       @show.save!
     end
 
@@ -59,11 +62,11 @@ module RustRadio
     end
 
     def add_songs
-      @flac_files.sort.each_with_index do |flac, index|
+      @flac_files.each_with_index do |flac, index|
         @show.songs.create(**song_attributes(flac), sort_order: index + 1)
-        putc '.'
+        $stdout.putc '.'
       end
-      puts
+      $stdout.puts
     end
 
     def song_attributes(flac)
@@ -86,7 +89,7 @@ module RustRadio
       @playlist = Playlist.first_or_create(name: @playlist_name)
       @playlist.entries.create(show: @show)
 
-      puts "Added to playlist '#{@playlist.name}'."
+      RustRadio.logger.info("Added to playlist '#{@playlist.name}'.")
     end
   end
 end

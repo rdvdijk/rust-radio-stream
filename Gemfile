@@ -12,6 +12,7 @@ gem 'activerecord'
 gem 'acts_as_list', require: false
 gem 'pg'
 
+gem 'curses'
 gem 'thor'
 
 gem 'haml'

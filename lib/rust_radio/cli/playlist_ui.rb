@@ -2,6 +2,7 @@
 
 require 'rust_radio/cli/terminal_ui'
 require 'rust_radio/cli/text_input'
+require 'rust_radio/cli/show_info'
 
 module RustRadio
   # Full-screen terminal UI to manage a playlist: the shows on the playlist on
@@ -73,6 +74,14 @@ module RustRadio
         right: Show.where.not(id: @playlist.shows.select(:id)).order(:date, :artist).to_a
       }
       SIDES.each { |side| restore_cursor(side, selected_ids[side]) }
+      @now_playing = now_playing
+    end
+
+    def now_playing
+      entry = @items[:left].first
+      return unless @playlist.online? && entry
+
+      [entry.current_song + 1, entry.show.songs.size, entry.song_to_play&.title]
     end
 
     def restore_cursor(side, selected_id)
@@ -156,27 +165,11 @@ module RustRadio
       return unless item
 
       show = show_of(item)
-      @popup = { title: " #{show.artist} · #{show.date} ", rows: show_info(show) + entry_info(item) }
+      @popup = { title: " #{show.artist} · #{show.date} ", rows: ShowInfo.rows(show) + entry_rows(item) }
     end
 
-    def show_info(show)
-      [['Notes', show.notes], ['Venue', show.venue], ['City', show.city_state], ['Festival', show.festival],
-       ['Length', format_length(show.length.to_i)], ['Songs', show.songs.count.to_s],
-       ['Folder', show.folder_path, :value, :start], ['Playlists', show.playlist_summary],
-       ['Last played', show.last_played_at&.strftime('%Y-%m-%d %H:%M')],
-       ['Added', show.created_at&.strftime('%Y-%m-%d')]].reject { |_label, value| value.blank? }
-    end
-
-    def entry_info(item)
-      return [] unless item.is_a?(PlaylistEntry)
-
-      rows = [['Position', "#{item.position} of #{@items[:left].size}"]]
-      return rows unless item.position == 1
-
-      song = item.song_to_play
-      label = @playlist.online? ? 'Now playing' : 'Next song'
-      rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}",
-               (:playing if @playlist.online?)]
+    def entry_rows(item)
+      item.is_a?(PlaylistEntry) ? ShowInfo.entry_rows(item, @items[:left].size, @playlist.online?) : []
     end
 
     def reorder_selected(key)
@@ -272,10 +265,20 @@ module RustRadio
       put(1, 2, 'Playlist:', :label)
       put(1, 12, @playlist.name, :highlight)
       col = 13 + @playlist.name.length
-      put(1, col, @playlist.online? ? '● online' : '○ offline', @playlist.online? ? :playing : :label)
+      status = @playlist.online? ? '● online' : '○ offline'
+      put(1, col, status, @playlist.online? ? :playing : :label)
 
-      total = "#{@items[:left].size} shows · #{format_length(@items[:left].sum { |entry| entry.show.length.to_i })}"
+      length = ShowInfo.format_length(@items[:left].sum { |entry| entry.show.length.to_i })
+      total = "#{@items[:left].size} shows · #{length}"
       put(1, @width - 2 - total.length, total, :label)
+      draw_now_playing(col + status.length, @width - 4 - total.length) if @now_playing
+    end
+
+    def draw_now_playing(col, right)
+      number, count, title = @now_playing
+      position = " · #{number}/#{count} "
+      put(1, col, truncate(position, right - col), :label)
+      put(1, col + position.length, truncate(title.to_s, right - col - position.length), :value)
     end
 
     def draw_panel_borders
@@ -363,11 +366,6 @@ module RustRadio
         [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[n notes], %w[d delete], %w[q quit],
          %w[s shuffle]]
       end
-    end
-
-    def format_length(milliseconds)
-      minutes = (milliseconds / 60_000).round
-      "#{minutes / 60}h #{(minutes % 60).to_s.rjust(2, '0')}m"
     end
   end
 end

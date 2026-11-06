@@ -17,7 +17,9 @@ module RustRadio
 
     REFRESH_MS = 2000 # reload periodically, the radio changes the playlist as it plays
     DELETE_KEYS = ['d', 'D', Curses::KEY_DC].freeze
-    MOVE_KEYS = [*ENTER_KEYS, ' '].freeze
+    MOVE_KEYS = ENTER_KEYS
+    INFO_KEYS = [' '].freeze
+    POPUP_MAX_WIDTH = 76
     SHUFFLE_KEYS = %w[s S].freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
     REORDER_KEYS = %w[k j g G].freeze
@@ -33,6 +35,7 @@ module RustRadio
       @items = { left: [], right: [] }
       @message = nil
       @confirm = nil
+      @popup = nil
       reload_data
     end
 
@@ -78,6 +81,7 @@ module RustRadio
 
     def handle_key(key)
       return answer_confirm(key) if @confirm
+      return close_popup(key) if @popup
       return :quit if QUIT_KEYS.include?(key)
 
       @message = nil unless key.nil? || key == Curses::KEY_RESIZE
@@ -95,6 +99,7 @@ module RustRadio
       when Curses::KEY_LEFT then @active = :left
       when Curses::KEY_RIGHT then @active = :right
       when *MOVE_KEYS then move_selected
+      when *INFO_KEYS then open_popup
       when 'l' then move_selected if @active == :left # left → right: remove from playlist
       when 'h' then move_selected if @active == :right # right → left: add to playlist
       when *REORDER_KEYS then @active == :left ? reorder_selected(key) : move_cursor(CURSOR_ALIASES[key])
@@ -134,6 +139,44 @@ module RustRadio
                  else
                    [entry.errors.full_messages.join(' '), :error]
                  end
+    end
+
+    # --- Show info pop-up ----------------------------------------------------
+
+    # The details are collected once, when the pop-up opens.
+    def open_popup
+      item = selected_item
+      return unless item
+
+      show = show_of(item)
+      @popup = { title: " #{show.artist} · #{show.date} ", rows: show_info(show) + entry_info(item) }
+    end
+
+    # Any key closes the pop-up, without doing anything else; the periodic
+    # refresh and resizes don't count.
+    def close_popup(key)
+      @popup = nil unless key.nil? || key == Curses::KEY_RESIZE
+      nil
+    end
+
+    def show_info(show)
+      [['Venue', show.venue], ['City', show.city_state], ['Festival', show.festival],
+       ['Length', format_length(show.length.to_i)], ['Songs', show.songs.count.to_s],
+       ['Folder', show.folder_path], ['Playlists', show.playlist_names.join(', ').presence || 'none'],
+       ['Last played', show.last_played_at&.strftime('%Y-%m-%d %H:%M')],
+       ['Added', show.created_at&.strftime('%Y-%m-%d')]].reject { |_label, value| value.blank? }
+    end
+
+    # Extra rows for a show on the playlist: its position, and what's playing.
+    def entry_info(item)
+      return [] unless item.is_a?(PlaylistEntry)
+
+      rows = [['Position', "#{item.position} of #{@items[:left].size}"]]
+      return rows unless item.position == 1
+
+      song = item.song_to_play
+      label = @playlist.online? ? 'Now playing' : 'Next song'
+      rows << [label, "#{item.current_song + 1}/#{item.show.songs.size} #{song&.title}"]
     end
 
     # k/j move the selected entry one up/down, g/G to the top/bottom.
@@ -215,6 +258,39 @@ module RustRadio
       SIDES.each { |side| draw_panel(side) }
       draw_status
       draw_help(@height - 2, help_items)
+      draw_popup if @popup
+    end
+
+    # A box centered on the screen, drawn over the panels.
+    def draw_popup
+      label_width = @popup[:rows].map { |label, _value| label.length }.max + 2
+      longest = @popup[:rows].map { |label, value| label_width + value.length }.max
+      max_width = [POPUP_MAX_WIDTH, @width - 4].min
+      width = (longest + 4).clamp([@popup[:title].length + 6, max_width].min, max_width)
+      height = [@popup[:rows].size + 4, @height - 2].min
+      top = (@height - height) / 2
+      left = (@width - width) / 2
+
+      draw_box(top, left, width, height, @popup[:title])
+      @popup[:rows].first(height - 4).each_with_index do |(label, value), index|
+        draw_popup_row(top + 1 + index, left + 2, width - 4, label_width, label, value)
+      end
+      hint = 'press any key to close'
+      put(top + height - 2, left + width - 2 - hint.length, hint, :help)
+    end
+
+    def draw_popup_row(row, col, width, label_width, label, value)
+      value_width = width - label_width
+      value = label == 'Folder' ? truncate_left(value, value_width) : truncate(value, value_width)
+      put(row, col, label, :label)
+      put(row, col + label_width, value, label == 'Now playing' ? :playing : :value)
+    end
+
+    def draw_box(top, left, width, height, title)
+      put(top, left, "┌#{'─' * (width - 2)}┐", :title)
+      put(top, left + 2, truncate(title, width - 4), :title)
+      (1...(height - 1)).each { |offset| put(top + offset, left, "│#{' ' * (width - 2)}│", :title) }
+      put(top + height - 1, left, "└#{'─' * (width - 2)}┘", :title)
     end
 
     def draw_header
@@ -311,10 +387,10 @@ module RustRadio
       return [['y', @confirm[:action]], ['any other key', 'cancel']] if @confirm
 
       if @active == :left
-        [['Tab/←/→', 'side'], ['↑/↓', 'select'], ['Enter/l', 'remove'], %w[j/k move], ['g/G', 'top/bottom'],
+        [['Tab/←/→', 'side'], ['Enter/l', 'remove'], %w[j/k move], ['g/G', 'top/bottom'], %w[Space info],
          %w[s shuffle], %w[q quit]]
       else
-        [['Tab/←/→', 'side'], ['↑/↓', 'select'], ['Enter/h', 'add'], %w[d delete], %w[s shuffle], %w[q quit]]
+        [['Tab/←/→', 'side'], ['Enter/h', 'add'], %w[Space info], %w[d delete], %w[s shuffle], %w[q quit]]
       end
     end
 

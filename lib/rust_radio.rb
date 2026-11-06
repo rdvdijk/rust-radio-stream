@@ -38,6 +38,7 @@ module RustRadio
   require 'rust_radio/show_adder'
 
   require 'rust_radio/cli/add_show_ui'
+  require 'rust_radio/cli/playlist_ui'
   require 'rust_radio/cli/cli'
 
   require 'rust_radio/web/ui'

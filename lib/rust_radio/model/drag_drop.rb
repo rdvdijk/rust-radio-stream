@@ -36,6 +36,30 @@ module RustRadio
       end
     end
 
+    # Move to +new_position+ (1-based, clamped to the playlist). While online,
+    # the playing (first) entry doesn't move and nothing can take its place.
+    # Offline, the entry that loses first place starts over at its first song.
+    # Returns true if the entry moved; on a refusal, the reason is in #errors.
+    def move_to(new_position)
+      reload
+      unless removable? # also reloads the playlist
+        errors.add(:base, "Can't move the show that is playing while the radio is online.")
+        return false
+      end
+
+      first_free = playlist.online? ? 2 : 1
+      last = playlist.entries.size
+      return false if last < first_free
+
+      new_position = new_position.clamp(first_free, last)
+      return false if new_position == position
+
+      displaced_first = playlist.first if first? || new_position == 1
+      insert_at(new_position)
+      displaced_first&.reload&.reset! unless playlist.online?
+      true
+    end
+
     def reset!
       self.current_song = 0
       save

@@ -86,7 +86,7 @@ module RustRadio
     end
 
     def add_to_playlist
-      @playlist = Playlist.first_or_create(name: @playlist_name)
+      @playlist = Playlist.find_or_create_by!(name: @playlist_name)
       @playlist.entries.create(show: @show)
 
       RustRadio.logger.info("Added to playlist '#{@playlist.name}'.")

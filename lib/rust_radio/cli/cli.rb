@@ -20,7 +20,16 @@ module RustRadio
       end
     end
 
-    desc 'clear', "Remove all shows (just don't!)."
+    desc 'playlist', 'Add and remove shows on a playlist, and delete shows that are on no playlist.'
+    method_option :playlist, type: :string, default: 'Default'
+    def playlist
+      playlist = RustRadio::Playlist.find_by(name: options['playlist'])
+      raise Thor::Error, "Playlist '#{options['playlist']}' does not exist." unless playlist
+
+      RustRadio::PlaylistUI.new(playlist).run
+    end
+
+    desc 'clear',"Remove all shows (just don't!)."
     method_options really: :boolean
     def clear
       DataMapper.auto_migrate! if options['really']

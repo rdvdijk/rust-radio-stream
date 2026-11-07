@@ -15,6 +15,11 @@ module RustRadio
     HOME_KEYS = [Curses::KEY_HOME, "\x01"].freeze # Ctrl-A, as in a shell
     END_KEYS = [Curses::KEY_END, "\x05"].freeze # Ctrl-E
 
+    # Whether +key+ is a typed character rather than a control or function key.
+    def self.printable?(key)
+      key.is_a?(String) && key.match?(/\A[^[:cntrl:]]\z/)
+    end
+
     def initialize(title, text = nil)
       @title = title
       @chars = text.to_s.chars
@@ -63,7 +68,7 @@ module RustRadio
     end
 
     def insert(key)
-      return unless key.is_a?(String) && key.match?(/\A[^[:cntrl:]]\z/) && @chars.size < MAX_LENGTH
+      return unless TextInput.printable?(key) && @chars.size < MAX_LENGTH
 
       @chars.insert(@cursor, key)
       @cursor += 1

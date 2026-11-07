@@ -195,6 +195,23 @@ module RustRadio
       end
     end
 
+    # Buttons centered on +row+; +buttons+ maps button names to labels.
+    def draw_buttons(row, buttons, selected)
+      labels = buttons.each_with_index.map do |(_name, label), index|
+        index == selected ? "[ #{label} ]" : "< #{label} >"
+      end
+      col = [(@width - labels.sum(&:length) - (BUTTON_GAP * (labels.size - 1))) / 2, 1].max
+
+      buttons.keys.each_with_index do |name, index|
+        put(row, col, labels[index], index == selected ? :"#{name}_selected" : name)
+        col += labels[index].length + BUTTON_GAP
+      end
+    end
+
+    public
+
+    # The drawing API, also for overlays such as TextViewer (see #width and #height).
+
     def list_rows
       [@height - self.class::HEADER_ROWS - self.class::FOOTER_ROWS, 1].max
     end
@@ -212,22 +229,6 @@ module RustRadio
       (index.zero? && above.positive?) || (index == list_rows - 1 && below.positive?)
     end
 
-    # Buttons centered on +row+; +buttons+ maps button names to labels.
-    def draw_buttons(row, buttons, selected)
-      labels = buttons.each_with_index.map do |(_name, label), index|
-        index == selected ? "[ #{label} ]" : "< #{label} >"
-      end
-      col = [(@width - labels.sum(&:length) - (BUTTON_GAP * (labels.size - 1))) / 2, 1].max
-
-      buttons.keys.each_with_index do |name, index|
-        put(row, col, labels[index], index == selected ? :"#{name}_selected" : name)
-        col += labels[index].length + BUTTON_GAP
-      end
-    end
-
-    public
-
-    # The drawing API, also for overlays such as TextViewer (see #width and #height).
     def draw_box(top, left, width, height, title, style_name = :title)
       put(top, left, "┌#{'─' * (width - 2)}┐", style_name)
       put(top, left + 2, truncate(title, width - 4), style_name)

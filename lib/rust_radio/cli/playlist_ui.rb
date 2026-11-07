@@ -3,6 +3,8 @@
 require 'rust_radio/cli/terminal_ui'
 require 'rust_radio/cli/text_input'
 require 'rust_radio/cli/show_info'
+require 'rust_radio/cli/playlist_search'
+require 'rust_radio/cli/playlist_panel'
 
 module RustRadio
   # Full-screen terminal UI to manage a playlist: the shows on the playlist on
@@ -20,7 +22,7 @@ module RustRadio
     REFRESH_MS = 2000 # reload periodically, the radio changes the playlist as it plays
     # Keys that run an action whichever side is active.
     ACTIONS = {
-      'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, 'n' => :edit_notes,
+      'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, 'n' => :edit_notes, '/' => :start_search,
       's' => :ask_shuffle, 'S' => :ask_shuffle, 'd' => :ask_delete, 'D' => :ask_delete, Curses::KEY_DC => :ask_delete
     }.freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
@@ -33,11 +35,12 @@ module RustRadio
       @playlist = playlist
       @active = :left
       @cursor = { left: 0, right: 0 }
-      @offset = { left: 0, right: 0 }
+      @panels = SIDES.to_h { |side| [side, PlaylistPanel.new(side, self, method(:title_of))] }
       @items = { left: [], right: [] }
       @message = nil
       @confirm = nil
       @popup = nil
+      @search = nil
       reload_data
     end
 
@@ -74,6 +77,7 @@ module RustRadio
         right: Show.where.not(id: @playlist.shows.select(:id)).order(:date, :artist).to_a
       }
       SIDES.each { |side| restore_cursor(side, selected_ids[side]) }
+      @search&.find(@items)
       @now_playing = now_playing
     end
 
@@ -97,13 +101,16 @@ module RustRadio
       item.is_a?(PlaylistEntry) ? item.show : item
     end
 
+    # The title shown, and searched, for an item on either side.
+    def title_of(item)
+      show_of(item).long_title
+    end
+
     def handle_key(key)
-      if @input
-        answer_input(key)
-      elsif @confirm
-        answer_confirm(key)
-      elsif @popup
-        @popup = nil
+      return if handled_by_overlay?(key)
+
+      if @search && ESCAPE_KEYS.include?(key)
+        @search = nil
       elsif QUIT_KEYS.include?(key)
         return :quit
       else
@@ -111,6 +118,17 @@ module RustRadio
         safely { perform(key) }
       end
       nil
+    end
+
+    # Sends +key+ to the open overlay, if any; returns whether there was one.
+    def handled_by_overlay?(key)
+      if @search&.typing? then search_key(key)
+      elsif @input then answer_input(key)
+      elsif @confirm then answer_confirm(key)
+      elsif @popup then @popup = nil
+      else return false
+      end
+      true
     end
 
     def perform(key)
@@ -214,6 +232,25 @@ module RustRadio
       @input = nil if result
     end
 
+    def start_search
+      @search = PlaylistSearch.new { |item| title_of(item) }
+    end
+
+    # Selects the first match as the search is typed: on the playlist, or on
+    # the other side if the playlist has none.
+    def search_key(key)
+      case @search.handle_key(key)
+      when :cancel then @search = nil
+      when :changed
+        @search.find(@items)
+        side, index = @search.first_match
+        return unless side
+
+        @active = side
+        @cursor[side] = index
+      end
+    end
+
     def ask_delete
       show = selected_item
       if @active == :left
@@ -299,58 +336,17 @@ module RustRadio
     end
 
     def draw_panel(side)
-      col, width = panel_bounds(side)
-      return draw_empty_panel(side, col) if @items[side].empty?
-
-      scroll_into_view(side)
-      above = @offset[side]
-      below = @items[side].size - above - list_rows
-      @items[side][above, list_rows].each_with_index do |item, index|
-        draw_item(side, item, above + index, HEADER_ROWS + index, col, width,
-                  hint: scroll_hint_row?(index, above, below))
-      end
-      draw_scroll_hints(HEADER_ROWS, col + width - 1, above, below)
-    end
-
-    def scroll_into_view(side)
-      cursor = @cursor[side]
-      @offset[side] = cursor if cursor < @offset[side]
-      @offset[side] = cursor - list_rows + 1 if cursor >= @offset[side] + list_rows
-      @offset[side] = @offset[side].clamp(0, [@items[side].size - list_rows, 0].max)
-    end
-
-    # +hint+: the row shares space with a "▲/▼ N more" hint.
-    def draw_item(side, item, index, row, col, width, hint: false)
-      prefix, prefix_style = item_prefix(side, item, index)
-      text_width = width - prefix.length - 1 - (hint ? SCROLL_HINT_WIDTH : 0)
-      text = truncate(show_of(item).long_title, text_width)
-
-      if index == @cursor[side] && side == @active
-        put(row, col, "#{prefix}#{text}".ljust(width), :cursor_selected)
-      else
-        put(row, col, prefix, prefix_style)
-        put(row, col + prefix.length, text, index == @cursor[side] ? :cursor : nil)
-      end
-    end
-
-    # The "▶  1 " in front of a playlist entry, or just a margin for other shows.
-    def item_prefix(side, item, index)
-      return [' ', nil] if side == :right
-
-      playing = index.zero? && @playlist.online?
-      number = item.position.to_s.rjust(@items[:left].size.to_s.length)
-      [" #{playing ? '▶' : ' '} #{number}  ", playing ? :playing : :number]
-    end
-
-    def draw_empty_panel(side, col)
-      text = side == :left ? 'The playlist is empty.' : 'All shows are on the playlist.'
-      put(HEADER_ROWS, col + 2, text, :label)
+      view = PlaylistPanel::View.new(items: @items[side], cursor: @cursor[side], active: side == @active,
+                                     playing: @playlist.online?, search: @search)
+      @panels[side].draw(HEADER_ROWS, *panel_bounds(side), view)
     end
 
     def draw_status
       row = @height - 4
       if @confirm
         put(row, 2, truncate(@confirm[:question], @width - 4), :error)
+      elsif @search && (@search.typing? || !@message)
+        @search.draw(self, row)
       elsif @message
         put(row, 2, truncate(@message[0], @width - 4), @message[1])
       end
@@ -358,13 +354,14 @@ module RustRadio
 
     def help_items
       return [['y', @confirm[:action]], ['any other key', 'cancel']] if @confirm
+      return PlaylistSearch::HELP if @search&.typing?
 
       if @active == :left
         [['Tab/←/→', 'side', 'Tab'], ['Enter/l', 'remove', 'l'], %w[j/k move], ['g/G', 'top/bottom'],
-         %w[Space info], %w[n notes], %w[q quit], %w[s shuffle]]
+         %w[Space info], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle]]
       else
-        [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[n notes], %w[d delete], %w[q quit],
-         %w[s shuffle]]
+        [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[n notes], %w[/ search], %w[d delete],
+         %w[q quit], %w[s shuffle]]
       end
     end
   end

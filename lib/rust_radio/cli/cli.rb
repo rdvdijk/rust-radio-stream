@@ -5,7 +5,11 @@ require 'thor'
 module RustRadio
   # Command line interface stuff
   class CLI < Thor
-    desc 'add_show [PATH]', 'Add a show to the default playlist.'
+    def self.exit_on_failure?
+      true
+    end
+
+    desc 'add_show PATH', 'Add a show to the default playlist.'
     method_option :playlist, type: :string, default: 'Default'
     def add_show(path)
       raise Thor::MalformattedArgumentError, "#{path} does not exist." unless File.exist?(path)

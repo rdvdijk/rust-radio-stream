@@ -46,7 +46,7 @@ module RustRadio
     # Checks the database for the online state: removable? reloads the playlist.
     def move_refusal(new_position)
       return "Can't move the show that is playing while the radio is online." unless removable?
-      return unless new_position < first_free_position && position == first_free_position
+      return unless playlist.online? && new_position < first_free_position && position == first_free_position
 
       'The show that is playing stays at the top while the radio is online.'
     end

@@ -155,6 +155,7 @@ module RustRadio
       when TEXT_VIEWER_KEY then open_text_viewer
       when NOTES_KEY then @input = TextInput.new(' Notes: why this show is added ', @notes) unless @existing
       when *ENTER_KEYS then return @buttons.keys[@selected] == :add ? :add : :cancel
+      when *ESCAPE_KEYS then confirm_quit(:cancel, 'Quit without adding the show?')
       when *QUIT_KEYS then return :cancel
       else navigate(key) unless @existing
       end

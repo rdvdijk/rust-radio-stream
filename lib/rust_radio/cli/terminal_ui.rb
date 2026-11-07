@@ -11,7 +11,8 @@ module RustRadio
   # define HEADER_ROWS and FOOTER_ROWS, the rows around their list.
   #
   # Only real keys reach #handle_key: a getch timeout or a terminal resize
-  # goes to #on_idle instead, followed by a redraw.
+  # goes to #on_idle instead, followed by a redraw. While a quit
+  # confirmation (#confirm_quit) is open, it gets the keys instead.
   class TerminalUI
     # getch returns control characters as Integers; accept Strings too, to be safe.
     ENTER_KEYS = [10, 13, "\n", "\r", Curses::KEY_ENTER].freeze
@@ -67,7 +68,7 @@ module RustRadio
           next
         end
 
-        result = handle_key(key)
+        result = @quit_confirm ? answer_quit(key) : handle_key(key)
         return result if result
       end
     rescue Interrupt
@@ -125,8 +126,23 @@ module RustRadio
         draw_too_small
       else
         draw_screen
+        draw_popup(' Quit ', [], message: [@quit_confirm[:question]], hint: 'Enter/y quit · Esc back') if @quit_confirm
       end
       Curses.refresh
+    end
+
+    # Asks +question+ in a pop-up: Enter or y then ends #run with +result+,
+    # Esc (or n) goes back. Returns nil, so #handle_key can return it.
+    def confirm_quit(result, question)
+      @quit_confirm = { result:, question: }
+      nil
+    end
+
+    def answer_quit(key)
+      case key
+      when *ENTER_KEYS, 'y', 'Y' then @quit_confirm[:result]
+      when *ESCAPE_KEYS, 'n', 'N' then @quit_confirm = nil
+      end
     end
 
     def draw_too_small

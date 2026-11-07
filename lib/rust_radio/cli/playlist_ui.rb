@@ -111,6 +111,8 @@ module RustRadio
 
       if @search && ESCAPE_KEYS.include?(key)
         @search = nil
+      elsif ESCAPE_KEYS.include?(key)
+        confirm_quit(:quit, 'Quit the playlist editor?')
       elsif QUIT_KEYS.include?(key)
         return :quit
       else

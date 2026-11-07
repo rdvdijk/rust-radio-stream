@@ -18,8 +18,12 @@ module RustRadio
     # The entry that is playing (the first one, while the radio is online)
     # can't be removed. Checks the database, as the radio runs in another process.
     def removable?
+      !playing?
+    end
+
+    def playing?
       playlist.reload
-      !(playlist.online? && playlist.first == self)
+      playlist.online? && playlist.first == self
     end
 
     def song_to_play

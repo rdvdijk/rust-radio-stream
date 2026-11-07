@@ -5,6 +5,7 @@ require 'rust_radio/cli/text_input'
 require 'rust_radio/cli/show_info'
 require 'rust_radio/cli/playlist_search'
 require 'rust_radio/cli/playlist_panel'
+require 'rust_radio/cli/song_list'
 
 module RustRadio
   # Full-screen terminal UI to manage a playlist: the shows on the playlist on
@@ -23,6 +24,7 @@ module RustRadio
     # Keys that run an action whichever side is active.
     ACTIONS = {
       'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, 'n' => :edit_notes, '/' => :start_search,
+      'e' => :open_songs, 'E' => :open_songs,
       's' => :ask_shuffle, 'S' => :ask_shuffle, 'd' => :ask_delete, 'D' => :ask_delete, Curses::KEY_DC => :ask_delete
     }.freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
@@ -56,7 +58,7 @@ module RustRadio
     end
 
     def on_idle(key)
-      safely { reload_data } if key.nil? && !@confirm && !@popup && !@input
+      safely { reload_data } if key.nil? && !@confirm && !@popup && !@input && !@songs
     end
 
     def safely
@@ -127,6 +129,7 @@ module RustRadio
       if @search&.typing? then search_key(key)
       elsif @input then answer_input(key)
       elsif @confirm then answer_confirm(key)
+      elsif @songs then @songs = nil if @songs.handle_key(key, @height) == :close
       elsif @popup then @popup = nil
       else return false
       end
@@ -186,6 +189,12 @@ module RustRadio
 
       show = show_of(item)
       @popup = { title: " #{show.artist} · #{show.date} ", rows: ShowInfo.rows(show) + entry_rows(item) }
+    end
+
+    def open_songs
+      item = selected_item
+      playing = item if item.is_a?(PlaylistEntry) && item.playing?
+      @songs = SongList.new(show_of(item), playing_entry: playing) if item
     end
 
     def entry_rows(item)
@@ -297,6 +306,7 @@ module RustRadio
       draw_status
       draw_help(@height - 2, help_items)
       draw_popup(@popup[:title], @popup[:rows], hint: 'press any key to close') if @popup
+      @songs&.draw(self)
       @input&.draw(self)
     end
 
@@ -360,10 +370,10 @@ module RustRadio
 
       if @active == :left
         [['Tab/←/→', 'side', 'Tab'], ['Enter/l', 'remove', 'l'], %w[j/k move], ['g/G', 'top/bottom'],
-         %w[Space info], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle]]
+         %w[Space info], %w[e songs], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle]]
       else
-        [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[n notes], %w[/ search], %w[d delete],
-         %w[q quit], %w[s shuffle]]
+        [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[e songs], %w[n notes], %w[/ search],
+         %w[d delete], %w[q quit], %w[s shuffle]]
       end
     end
   end

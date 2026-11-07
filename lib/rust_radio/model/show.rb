@@ -26,6 +26,16 @@ module RustRadio
       playlist_names.join(', ').presence || 'none'
     end
 
+    # Whether the radio is playing this show: it's first on an online playlist.
+    def playing?
+      playlist_entries.reload.any?(&:playing?)
+    end
+
+    # The songs association may be cached, so this sums in the database.
+    def update_length!
+      update!(length: Song.where(show_id: id).sum(:length))
+    end
+
     def get(index)
       songs[index]
     end

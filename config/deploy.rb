@@ -44,6 +44,7 @@ set :keep_releases, 10
 
 # Set Ruby version to use during deployment:
 set :mise_ruby_version, '3.4.12'
+set :mise_path, '/usr/bin/mise'
 
 namespace :deploy do
   desc 'Restart services'

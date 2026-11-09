@@ -33,11 +33,11 @@ module RustRadio
         artist: flac.tags['ARTIST'],
         album: flac.tags['ALBUM']
       }
+    rescue StandardError => e
+      RustRadio.logger.warn("Can't read the tags of #{full_file_path}: #{e.class}: #{e.message}")
+      database_info
     end
 
-    # Sets the file to +path+, relative to the show folder or absolute inside
-    # it, and the length to the new file's if it can be read. Returns false
-    # with the reason in #errors.
     def change_file_path(path)
       self.file_path = path_from_folder(path.strip)
       read_length
@@ -45,6 +45,10 @@ module RustRadio
     end
 
     private
+
+    def database_info
+      { title:, artist: show.artist, album: show.long_title }
+    end
 
     # "./a.flac", "disc1/../a.flac" and the full path all become "a.flac". A
     # path outside the folder starts with "..", which the validation refuses.

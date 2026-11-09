@@ -36,6 +36,53 @@ namespace :sanity do
     end
   end
 
+  desc 'Decode all songs with `flac --test` and report the ones that fail. Only reads the database.'
+  task :test do
+    require 'io/console'
+    require 'open3'
+    require './init'
+
+    # Lowest CPU and idle IO priority (inherited by the flac processes), so
+    # the test doesn't starve the transcoder of the running stream.
+    Process.setpriority(Process::PRIO_PROCESS, 0, 19)
+    system('ionice', '-c', '3', '-p', Process.pid.to_s, err: File::NULL)
+
+    # On a terminal the progress line is redrawn in place, so it's cut to the
+    # terminal width: a wrapped line can't be cleared with \r. In a log every
+    # song gets its own line.
+    tty = $stdout.tty?
+    width = tty ? $stdout.winsize[1].nonzero? || 80 : nil
+
+    failures = []
+    count = 0
+    total = RustRadio::Song.count
+    RustRadio::Song.includes(:show).find_each do |song|
+      count += 1
+      path = song.full_file_path
+      progress = "[#{count}/#{total}, #{failures.size} failed] #{path}"
+      if tty
+        print progress[0, width - 1]
+        $stdout.flush
+      else
+        puts progress
+      end
+      error = if File.exist?(path)
+                output, status = Open3.capture2e('flac', '--test', '--silent', path)
+                output.strip unless status.success?
+              else
+                'file not found'
+              end
+      print "\r\e[K" if tty
+      next unless error
+
+      failures << song
+      puts "Song ##{song.id} (show ##{song.show_id}) #{path}\n  #{error.gsub("\n", "\n  ")}"
+    end
+
+    puts "Tested #{count} songs, #{failures.size} failed."
+    exit 1 if failures.any?
+  end
+
   desc 'Do a dry-run of playing songs.'
   task :dryrun do
     require 'pry'

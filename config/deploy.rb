@@ -43,7 +43,7 @@ set :keep_releases, 10
 # set :ssh_options, verify_host_key: :secure
 
 # Set Ruby version to use during deployment:
-set :chruby_ruby, 'ruby-3.4.12'
+set :mise_ruby_version, '3.4.12'
 
 namespace :deploy do
   desc 'Restart services'

@@ -33,7 +33,7 @@ end
 group :development do
   gem 'capistrano', '~> 3.20.1', require: false
   gem 'capistrano-bundler', require: false
-  gem 'capistrano-chruby', require: false
+  gem 'capistrano-mise', require: false
   gem 'pry-nav'
   gem 'rubocop', '~> 1.92', require: false
   gem 'rubocop-rake', '~> 0.7', require: false

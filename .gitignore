@@ -8,3 +8,4 @@ config/deploy/staging.rb
 config/deploy/production.rb
 *.rrd
 .bundle
+tmp/

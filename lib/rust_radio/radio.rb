@@ -48,17 +48,16 @@ module RustRadio
     end
 
     def update_show_title
-      show_title = @playlist.current_show_title
-      social_media_next_show!(show_title)
+      social_media_next_show!(@playlist.current_show)
     end
 
     def social_media_next_song!(song)
       @tune_in.song_update(song)
     end
 
-    def social_media_next_show!(message)
-      @tweeter.show_update(message)
-      @facebook_poster.show_update(message)
+    def social_media_next_show!(show)
+      @tweeter.show_update(show.long_title)
+      @facebook_poster.show_update(show)
     end
   end
 end

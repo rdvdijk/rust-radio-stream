@@ -40,8 +40,8 @@ module RustRadio
       reload
     end
 
-    def current_show_title
-      first.show_title
+    def current_show
+      first.show
     end
 
     def next_show?

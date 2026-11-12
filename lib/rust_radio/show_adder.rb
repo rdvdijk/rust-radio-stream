@@ -86,7 +86,18 @@ module RustRadio
         **info.slice(:artist, :date, :venue, :city_state, :festival),
         notes: @notes,
         info_file: info[:lines].join('\n'),
-        setlist_identifier: "#{info[:date_text].gsub(/[^\d]/, '')}0" }
+        setlist_identifier: self.class.setlist_identifier(info[:date], info[:date_text]) }
+    end
+
+    # The show's identifier on sugarmtn.org, which numbers the shows of a day:
+    # 0 for the only show, 1 for the early show and 2 for the late show.
+    def self.setlist_identifier(date, date_text)
+      suffix = case date_text
+               when /\bearly\b/i then '1'
+               when /\blate\b/i then '2'
+               else '0'
+               end
+      "#{date.strftime('%Y%m%d')}#{suffix}"
     end
 
     def add_songs

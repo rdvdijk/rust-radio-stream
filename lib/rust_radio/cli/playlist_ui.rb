@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'rust_radio/cli/terminal_ui'
-require 'rust_radio/cli/text_input'
+require 'rust_radio/cli/show_field_input'
 require 'rust_radio/cli/show_info'
 require 'rust_radio/cli/playlist_search'
 require 'rust_radio/cli/playlist_panel'
@@ -21,10 +21,11 @@ module RustRadio
     MIN_WIDTH = 60
 
     REFRESH_MS = 2000 # reload periodically, the radio changes the playlist as it plays
-    # Keys that run an action whichever side is active.
+    # Keys that run an action whichever side is active: a method name, or a
+    # method name and its argument.
     ACTIONS = {
-      'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, 'n' => :edit_notes, '/' => :start_search,
-      'e' => :open_songs, 'E' => :open_songs,
+      'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, '/' => :start_search,
+      'n' => %i[edit_field notes], 'i' => %i[edit_field setlist_identifier], 'e' => :open_songs, 'E' => :open_songs,
       's' => :ask_shuffle, 'S' => :ask_shuffle, 'd' => :ask_delete, 'D' => :ask_delete, Curses::KEY_DC => :ask_delete
     }.freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
@@ -137,7 +138,7 @@ module RustRadio
     end
 
     def perform(key)
-      return send(ACTIONS[key]) if ACTIONS.key?(key)
+      return send(*ACTIONS[key]) if ACTIONS.key?(key)
 
       case key
       when *TAB_KEYS, Curses::KEY_BTAB then @active = @active == :left ? :right : :left
@@ -224,23 +225,17 @@ module RustRadio
       end
     end
 
-    def edit_notes
+    def edit_field(field)
       show = selected_item && show_of(selected_item)
-      return unless show
-
-      @input = TextInput.new(" Notes: #{show.long_title} ", show.notes)
-      @input_show = show
+      @input = ShowFieldInput.new(show, field) if show
     end
 
+    # A database error closes the input, like a save does.
     def answer_input(key)
-      result = @input.handle_key(key)
-      if result == :save
-        safely do
-          @input_show.update!(notes: @input.text.presence)
-          @message = ["Saved the notes for #{@input_show.long_title}", :playing]
-        end
-      end
-      @input = nil if result
+      result = :close
+      safely { result = @input.handle_key(key) }
+      @message = @input.message if @input.message
+      @input = nil if result == :close
     end
 
     def start_search
@@ -370,10 +365,10 @@ module RustRadio
 
       if @active == :left
         [['Tab/←/→', 'side', 'Tab'], ['Enter/l', 'remove', 'l'], %w[j/k move], ['g/G', 'top/bottom'],
-         %w[Space info], %w[e songs], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle]]
+         %w[Space info], %w[e songs], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle], ['i', 'setlist ID']]
       else
         [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[e songs], %w[n notes], %w[/ search],
-         %w[d delete], %w[q quit], %w[s shuffle]]
+         %w[d delete], %w[q quit], %w[s shuffle], ['i', 'setlist ID']]
       end
     end
   end

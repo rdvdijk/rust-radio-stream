@@ -46,6 +46,8 @@ set :keep_releases, 10
 set :mise_ruby_version, '3.4.12'
 set :mise_path, '/usr/bin/mise'
 
+set :bundle_version, 4
+
 namespace :deploy do
   desc 'Restart services'
   task :restart do

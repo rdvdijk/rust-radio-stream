@@ -83,6 +83,52 @@ namespace :sanity do
     exit 1 if failures.any?
   end
 
+  desc 'Check that the setlist identifiers of all shows point to matching sugarmtn.org pages.'
+  task :setlists do
+    require 'faraday'
+    require 'json'
+    require 'nokogiri'
+    require './init'
+
+    conn = Faraday.new(url: 'https://sugarmtn.org')
+    # sugarmtn.org answers 200 with a generic page for unknown shows, so a
+    # show only exists if its page describes it as a MusicEvent.
+    events = Hash.new do |cache, id|
+      sleep 0.5 # be gentle with a volunteer-run site
+      html = Nokogiri::HTML(conn.get('/sm_show.php', show: id).body)
+      cache[id] = html.css('script[type="application/ld+json"]').filter_map do |script|
+        data = JSON.parse(script.text)
+        data if data['@type'] == 'MusicEvent'
+      rescue JSON::ParserError
+        nil
+      end.first
+    end
+    day_ids = ->(id) { %w[0 1 2].map { |n| "#{id[0, 8]}#{n}" }.select { |other| events[other] } }
+
+    problems = 0
+    RustRadio::Show.order(:date).each do |show|
+      id = show.setlist_identifier
+      error = if id.blank?
+                'no setlist identifier'
+              elsif !id.match?(/\A\d{8}[012]\z/)
+                "malformed setlist identifier #{id}"
+              elsif (event = events[id]).nil?
+                "#{id} not found on sugarmtn.org, the day has: #{day_ids[id].join(', ').presence || 'nothing'}"
+              elsif event['startDate'] != show.date.iso8601
+                "#{id} is a show on #{event['startDate']}"
+              elsif id.end_with?('0') && events["#{id[0, 8]}1"]
+                "#{id} is ambiguous, the day has: #{day_ids[id].join(', ')}"
+              end
+      next unless error
+
+      problems += 1
+      puts "Show ##{show.id} #{show.date} #{show.city_state} (#{show.venue}): #{error}"
+    end
+
+    puts "Checked #{RustRadio::Show.count} shows, #{problems} with problems."
+    exit 1 if problems.positive?
+  end
+
   desc 'Do a dry-run of playing songs.'
   task :dryrun do
     require 'pry'

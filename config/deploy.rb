@@ -51,6 +51,11 @@ set :bundle_version, 4
 namespace :deploy do
   desc 'Restart services'
   task :restart do
+    if ENV['SKIP_RESTART']
+      warn 'SKIP_RESTART is set: the services keep running the previous release until they restart.'
+      next
+    end
+
     on roles(:app), in: :sequence, wait: 5 do
       execute :sudo, :service, 'rust-radio-console', :restart
       execute :sudo, :service, 'rust-radio-stream', :restart

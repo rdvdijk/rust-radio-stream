@@ -43,7 +43,7 @@ set :keep_releases, 10
 # set :ssh_options, verify_host_key: :secure
 
 # Set Ruby version to use during deployment:
-set :mise_ruby_version, '3.4.12'
+set :mise_ruby_version, '3.4.13'
 set :mise_path, '/usr/bin/mise'
 
 set :bundle_version, 4

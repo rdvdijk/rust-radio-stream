@@ -25,7 +25,8 @@ module RustRadio
     # method name and its argument.
     ACTIONS = {
       'r' => :reload_data, 'R' => :reload_data, ' ' => :open_popup, '/' => :start_search,
-      'n' => %i[edit_field notes], 'i' => %i[edit_field setlist_identifier], 'e' => :open_songs, 'E' => :open_songs,
+      'n' => %i[edit_field notes], 'i' => %i[edit_field setlist_identifier], 'f' => %i[edit_field folder_path],
+      'e' => :open_songs, 'E' => :open_songs,
       's' => :ask_shuffle, 'S' => :ask_shuffle, 'd' => :ask_delete, 'D' => :ask_delete, Curses::KEY_DC => :ask_delete
     }.freeze
     # On the left these reorder the playlist; on the right they just move the cursor.
@@ -38,7 +39,7 @@ module RustRadio
       @playlist = playlist
       @active = :left
       @cursor = { left: 0, right: 0 }
-      @panels = SIDES.to_h { |side| [side, PlaylistPanel.new(side, self, method(:title_of))] }
+      @panels = SIDES.to_h { |side| [side, PlaylistPanel.new(side, self, method(:title_of), method(:missing?))] }
       @items = { left: [], right: [] }
       @message = nil
       @confirm = nil
@@ -79,9 +80,15 @@ module RustRadio
         left: @playlist.entries.includes(:show).to_a,
         right: Show.where.not(id: @playlist.shows.select(:id)).order(:date, :artist).to_a
       }
+      # Shows whose folder is gone, for example because it was renamed.
+      @missing = @items.values.flatten.map { show_of(it) }.reject { File.directory?(it.folder_path.to_s) }.to_set(&:id)
       SIDES.each { |side| restore_cursor(side, selected_ids[side]) }
       @search&.find(@items)
       @now_playing = now_playing
+    end
+
+    def missing?(item)
+      @missing.include?(show_of(item).id)
     end
 
     def now_playing
@@ -233,7 +240,7 @@ module RustRadio
     # A database error closes the input, like a save does.
     def answer_input(key)
       result = :close
-      safely { result = @input.handle_key(key) }
+      safely { reload_data if (result = @input.handle_key(key)) == :close }
       @message = @input.message if @input.message
       @input = nil if result == :close
     end
@@ -332,8 +339,9 @@ module RustRadio
       put(@height - 5, split, '┴', :border)
       (HEADER_ROWS...(HEADER_ROWS + list_rows)).each { |row| put(row, split, '│', :border) }
 
-      put(HEADER_ROWS - 1, 2, " On playlist (#{@items[:left].size}) ", @active == :left ? :title : :label)
-      put(HEADER_ROWS - 1, split + 2, " Not on playlist (#{@items[:right].size}) ",
+      put(HEADER_ROWS - 1, 2, " On playlist (#{@panels[:left].count_label(@items[:left])}) ",
+          @active == :left ? :title : :label)
+      put(HEADER_ROWS - 1, split + 2, " Not on playlist (#{@panels[:right].count_label(@items[:right])}) ",
           @active == :right ? :title : :label)
     end
 
@@ -365,10 +373,11 @@ module RustRadio
 
       if @active == :left
         [['Tab/←/→', 'side', 'Tab'], ['Enter/l', 'remove', 'l'], %w[j/k move], ['g/G', 'top/bottom'],
-         %w[Space info], %w[e songs], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle], ['i', 'setlist ID']]
+         %w[Space info], %w[e songs], %w[n notes], %w[/ search], %w[q quit], %w[s shuffle], ['i', 'setlist ID'],
+         %w[f folder]]
       else
         [['Tab/←/→', 'side', 'Tab'], ['Enter/h', 'add', 'h'], %w[Space info], %w[e songs], %w[n notes], %w[/ search],
-         %w[d delete], %w[q quit], %w[s shuffle], ['i', 'setlist ID']]
+         %w[d delete], %w[q quit], %w[s shuffle], ['i', 'setlist ID'], %w[f folder]]
       end
     end
   end

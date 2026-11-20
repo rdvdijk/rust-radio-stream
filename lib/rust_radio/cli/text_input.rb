@@ -20,14 +20,20 @@ module RustRadio
       key.is_a?(String) && key.match?(/\A[^[:cntrl:]]\z/)
     end
 
-    def initialize(title, text = nil)
+    def initialize(title, text = nil, help: HELP)
       @title = title
-      @chars = text.to_s.chars
-      @cursor = @chars.size
+      @help = help
+      self.text = text
     end
 
     def text
       @chars.join.strip
+    end
+
+    # Replaces the text, with the cursor at its end.
+    def text=(text)
+      @chars = text.to_s.chars
+      @cursor = @chars.size
     end
 
     # Returns :save or :cancel when the input is done.
@@ -50,7 +56,7 @@ module RustRadio
 
       screen.draw_box(top, left, width, HEIGHT, @title)
       draw_field(screen, top + 2, left + 3)
-      screen.draw_help(top + 3 + FIELD_ROWS, HELP, col: left + 3, right: left + width - 3)
+      screen.draw_help(top + 3 + FIELD_ROWS, @help, col: left + 3, right: left + width - 3)
     end
 
     private

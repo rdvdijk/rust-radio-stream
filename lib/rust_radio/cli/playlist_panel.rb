@@ -9,12 +9,20 @@ module RustRadio
     # PlaylistSearch whose matches are highlighted, or nil.
     View = Data.define(:items, :cursor, :active, :playing, :search)
 
-    # +title+ gives the text shown for an item.
-    def initialize(side, screen, title)
+    # +title+ gives the text shown for an item; +missing+ tells whether an
+    # item's show folder is gone.
+    def initialize(side, screen, title, missing)
       @side = side
       @screen = screen
       @title = title
+      @missing = missing
       @offset = 0
+    end
+
+    # The count in the panel's title: "42", or "42, 1 missing".
+    def count_label(items)
+      missing = items.count(&@missing)
+      missing.positive? ? "#{items.size}, #{missing} missing" : items.size.to_s
     end
 
     def draw(top, col, width, view)
@@ -52,19 +60,27 @@ module RustRadio
       else
         @screen.put(row, col, prefix, prefix_style)
         text_style = if @view.search&.match?(item) then :mark
+                     elsif @missing.call(item) then :error
                      elsif index == @view.cursor then :cursor
                      end
         @screen.put(row, col + prefix.length, text, text_style)
       end
     end
 
-    # The "▶  1 " in front of a playlist entry, or just a margin for other shows.
+    # The " ▶ 1  " in front of a playlist entry, or just a margin for other
+    # shows. The margin holds a mark when the show's folder is gone.
     def item_prefix(item, index)
-      return [' ', nil] if @side == :right
+      missing = @missing.call(item)
+      margin = missing ? SongList::MISSING_MARK : ' '
+      return [margin, (:error if missing)] if @side == :right
 
       playing = index.zero? && @view.playing
       number = item.position.to_s.rjust(@view.items.size.to_s.length)
-      [" #{playing ? '▶' : ' '} #{number}  ", playing ? :playing : :number]
+      style = if missing then :error
+              elsif playing then :playing
+              else :number
+              end
+      ["#{margin}#{playing ? '▶' : ' '} #{number}  ", style]
     end
 
     def draw_empty(top, col)

@@ -10,9 +10,15 @@ module RustRadio
       [['Notes', show.notes], ['Venue', show.venue], ['City', show.city_state], ['Festival', show.festival],
        ['Setlist ID', show.setlist_identifier],
        ['Length', format_length(show.length.to_i)], ['Songs', show.songs.count.to_s],
-       ['Folder', show.folder_path, :value, :start], ['Playlists', show.playlist_summary],
+       folder_row(show), ['Playlists', show.playlist_summary],
        ['Last played', show.last_played_at&.strftime('%Y-%m-%d %H:%M')],
        ['Added', show.created_at&.strftime('%Y-%m-%d')]].reject { |_label, value| value.blank? }
+    end
+
+    def folder_row(show)
+      return ['Folder', show.folder_path, :value, :start] if File.directory?(show.folder_path.to_s)
+
+      ['Folder', "#{show.folder_path} (not found)", :error, :start]
     end
 
     # Extra rows for a show on the playlist: its position, and for the first

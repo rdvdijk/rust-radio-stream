@@ -50,11 +50,9 @@ config:
     host: localhost
     database: radio
 
-  twitter:
-    consumer_key: "xxxxxxxxxxxxxxxxxxxxxx"
-    consumer_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    oauth_token: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    oauth_token_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  bluesky:
+    handle: rustradio.bsky.social
+    app_password: "xxxx-xxxx-xxxx-xxxx" # Settings → Privacy and security → App passwords
     disabled: false
 
   facebook:

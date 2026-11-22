@@ -25,19 +25,28 @@ module RustRadio
     end
 
     def show_update(show)
-      post(message_for(show))
+      post(texts_for(show))
     end
 
-    # The notes come last and are shortened to fit, so the title and the
-    # link are always in the post.
-    def message_for(show)
-      head = [
+    # The post, and replies with the rest of the notes if they don't fit.
+    # The notes come last, so the title and the link are always in the post.
+    def texts_for(show)
+      head = head_for(show)
+      notes, rest = split_to_fit(show.notes.to_s.strip, MAX_LENGTH - (head + SEPARATOR).grapheme_clusters.size)
+      texts = [notes.empty? ? head : "#{head}#{SEPARATOR}#{notes}"]
+      until rest.empty?
+        reply, rest = split_to_fit(rest, MAX_LENGTH - ELLIPSIS.length)
+        texts << "#{ELLIPSIS}#{reply}"
+      end
+      texts
+    end
+
+    def head_for(show)
+      [
         (BIRTHDAY_GREETING if neils_birthday?),
         "Now playing: #{show.long_title}",
         "Listen now on #{LISTEN_URL}"
       ].compact.join(SEPARATOR)
-      notes = fit(show.notes.to_s.strip, MAX_LENGTH - graphemes(head + SEPARATOR))
-      notes.empty? ? head : "#{head}#{SEPARATOR}#{notes}"
     end
 
     # Bluesky doesn't turn URLs in the text into links: a facet marks the
@@ -56,31 +65,40 @@ module RustRadio
 
     private
 
-    # +text+ cut to at most +length+ graphemes, at a word boundary where
-    # possible, with an ellipsis if anything was cut.
-    def fit(text, length)
-      return text if graphemes(text) <= length
-      return '' if length <= ELLIPSIS.length
+    # Splits +text+ into a part of at most +length+ graphemes and the rest.
+    # The cut is at a word boundary where possible, and a cut part ends in
+    # an ellipsis. With no room for any text, the part is empty.
+    def split_to_fit(text, length)
+      return [text, ''] if text.grapheme_clusters.size <= length
+      return ['', text] if length <= ELLIPSIS.length
 
       cut = text.grapheme_clusters.first(length - ELLIPSIS.length).join
       word_end = cut.rindex(/\s/)
       cut = cut[0, word_end] if word_end&.positive?
-      "#{cut.rstrip}#{ELLIPSIS}"
-    end
-
-    def graphemes(text)
-      text.grapheme_clusters.size
+      ["#{cut.rstrip}#{ELLIPSIS}", text[cut.length..].lstrip]
     end
 
     # Posts in a new thread, to prevent blocking the streaming of data.
-    def post(text)
+    def post(texts)
       return if @disabled
 
       Thread.new do
         session = create_session
-        create_post(session, text) if session
+        post_thread(session, texts) if session
       rescue Faraday::Error => e
         RustRadio.logger.error("Bluesky post failed: #{e.message}")
+      end
+    end
+
+    # Each reply answers the one before it, so they read as a thread. A
+    # failed post stops the rest, which would otherwise reply to nothing.
+    def post_thread(session, texts)
+      root = parent = nil
+      texts.each do |text|
+        parent = create_post(session, text, reply: root && { root:, parent: })
+        break unless parent
+
+        root ||= parent
       end
     end
 
@@ -92,15 +110,26 @@ module RustRadio
       nil
     end
 
-    def create_post(session, text)
-      record = { '$type': 'app.bsky.feed.post', text:, facets: link_facets(text), langs: ['en'],
-                 createdAt: Time.now.utc.iso8601(3) }
+    # Returns the post's { uri:, cid: }, which a reply refers to, or nil if
+    # posting failed.
+    def create_post(session, text, reply: nil)
       response = connection.post('com.atproto.repo.createRecord',
-                                 { repo: session['did'], collection: 'app.bsky.feed.post', record: },
-                                 'Authorization' => "Bearer #{session['accessJwt']}")
-      return if response.success?
+                                 { repo: session['did'], collection: 'app.bsky.feed.post',
+                                   record: record(text, reply) },
+                                 authorization(session))
+      return response.body.slice('uri', 'cid').transform_keys(&:to_sym) if response.success?
 
       RustRadio.logger.error("Bluesky post failed (#{response.status}): #{error_message(response)}")
+      nil
+    end
+
+    def record(text, reply)
+      { '$type': 'app.bsky.feed.post', text:, facets: link_facets(text), reply:, langs: ['en'],
+        createdAt: Time.now.utc.iso8601(3) }.compact
+    end
+
+    def authorization(session)
+      { 'Authorization' => "Bearer #{session['accessJwt']}" }
     end
 
     def connection

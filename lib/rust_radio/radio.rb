@@ -30,9 +30,8 @@ module RustRadio
     end
 
     def initialize_social_media
-      @bluesky_poster  = BlueskyPoster.new(@config['bluesky'])
-      @facebook_poster = FacebookPoster.new(@config['facebook'])
-      @tune_in         = TuneIn.new(@config['tune_in'])
+      @social_media = SocialMedia.new(@config)
+      @tune_in      = TuneIn.new(@config['tune_in'])
     end
 
     def initialize_playlist
@@ -56,8 +55,7 @@ module RustRadio
     end
 
     def social_media_next_show!(show)
-      @bluesky_poster.show_update(show)
-      @facebook_poster.show_update(show)
+      @social_media.show_update(show)
     end
   end
 end

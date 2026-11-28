@@ -9,6 +9,10 @@ module RustRadio
       true
     end
 
+    # Otherwise an option Thor doesn't know, like a mistyped --yes, would be
+    # taken as the message to announce.
+    check_unknown_options!
+
     desc 'add_show PATH', 'Add a show to the default playlist.'
     method_option :playlist, type: :string, default: 'Default'
     def add_show(path)
@@ -58,6 +62,43 @@ module RustRadio
     desc 'web', 'Start webserver.'
     def web
       RustRadio::Web::UI.run!
+    end
+
+    desc 'announce [MESSAGE]', 'Post a message to all enabled social media. Without MESSAGE, reads it from stdin.'
+    method_option :config_file, type: :string, default: 'config/config.yml'
+    method_option :yes, type: :boolean, aliases: '-y', desc: 'Post without asking first.'
+    def announce(message = nil)
+      message = (message || $stdin.read).strip
+      raise Thor::Error, 'The message is empty.' if message.empty?
+
+      social_media = RustRadio::SocialMedia.new(YAML.load_file(options['config_file'])['config'])
+      raise Thor::Error, 'No social media are enabled in the config.' if social_media.enabled.empty?
+
+      preview_announcement(social_media, message)
+      return say('Not posted.') unless options['yes'] || announcement_confirmed?
+
+      social_media.announce(message).each { |name, thread| say("#{name}: #{thread.value ? 'posted' : 'failed'}") }
+    end
+
+    no_commands do
+      def preview_announcement(social_media, message)
+        social_media.enabled.each do |name, poster|
+          texts = poster.announcement_texts(message)
+          say("#{name}#{" (#{texts.size} posts, as a thread)" if texts.size > 1}:", :bold)
+          texts.each { |text| say("#{text.gsub(/^/, '  ')}\n\n") }
+        end
+        disabled = social_media.disabled_names
+        say("Disabled in the config: #{disabled.join(', ')}") if disabled.any?
+      end
+
+      # A message from stdin leaves nothing to answer with, so that needs --yes.
+      def announcement_confirmed?
+        raise Thor::Error, 'Pass --yes to post without a terminal to confirm on.' unless $stdin.tty?
+
+        # Not Thor's yes?, which loads readline and so a deprecation warning.
+        print 'Post this? [y/N] '
+        %w[y yes].include?($stdin.gets.to_s.strip.downcase)
+      end
     end
 
     desc 'rrd', 'Update RRD statistisc'

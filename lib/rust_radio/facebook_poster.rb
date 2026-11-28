@@ -23,6 +23,19 @@ module RustRadio
       post(message_for(show), comment: (BIRTHDAY_COMMENT if neils_birthday?))
     end
 
+    # Returns the posting thread, or nil when disabled.
+    def announce(text)
+      post(text)
+    end
+
+    def announcement_texts(text)
+      [text]
+    end
+
+    def disabled?
+      @disabled
+    end
+
     def message_for(show)
       [
         (BIRTHDAY_GREETING if neils_birthday?),
@@ -38,7 +51,8 @@ module RustRadio
 
     private
 
-    # Posts in a new thread, to prevent blocking the streaming of data.
+    # Posts in a new thread, to prevent blocking the streaming of data. The
+    # thread's value is whether the post worked.
     def post(message, comment: nil)
       return if @disabled
 
@@ -47,11 +61,14 @@ module RustRadio
         response = connection.post('me/feed', message:, access_token: @access_token)
         if response.success?
           post_comment(JSON.parse(response.body)['id'], comment) if comment
+          true
         else
           RustRadio.logger.error("Facebook post failed (#{response.status}): #{error_message(response)}")
+          false
         end
       rescue Faraday::Error, JSON::ParserError => e
         RustRadio.logger.error("Facebook post failed: #{e.message}")
+        false
       end
     end
 

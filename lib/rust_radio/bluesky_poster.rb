@@ -3,6 +3,7 @@
 require 'date'
 require 'faraday'
 require 'time'
+require 'rust_radio/bluesky_text'
 
 module RustRadio
   # Posts to Bluesky every time a new show starts. Logs in with an app
@@ -12,10 +13,6 @@ module RustRadio
     SERVICE_URL = 'https://bsky.social'
     LISTEN_URL = 'https://rustradio.org'
     BIRTHDAY_GREETING = 'Happy birthday, Neil!'
-    # Bluesky's limit, counted in graphemes: what a reader sees as one
-    # character, so an emoji with modifiers counts once.
-    MAX_LENGTH = 300
-    ELLIPSIS = '…'
     SEPARATOR = "\n\n"
 
     def initialize(config)
@@ -28,17 +25,24 @@ module RustRadio
       post(texts_for(show))
     end
 
-    # The post, and replies with the rest of the notes if they don't fit.
+    # Returns the posting thread, or nil when disabled.
+    def announce(text)
+      post(announcement_texts(text))
+    end
+
+    def announcement_texts(text)
+      BlueskyText.thread('', text.strip)
+    end
+
+    def disabled?
+      @disabled
+    end
+
     # The notes come last, so the title and the link are always in the post.
     def texts_for(show)
       head = head_for(show)
-      notes, rest = split_to_fit(show.notes.to_s.strip, MAX_LENGTH - (head + SEPARATOR).grapheme_clusters.size)
-      texts = [notes.empty? ? head : "#{head}#{SEPARATOR}#{notes}"]
-      until rest.empty?
-        reply, rest = split_to_fit(rest, MAX_LENGTH - ELLIPSIS.length)
-        texts << "#{ELLIPSIS}#{reply}"
-      end
-      texts
+      notes = show.notes.to_s.strip
+      notes.empty? ? [head] : BlueskyText.thread("#{head}#{SEPARATOR}", notes)
     end
 
     def head_for(show)
@@ -49,44 +53,23 @@ module RustRadio
       ].compact.join(SEPARATOR)
     end
 
-    # Bluesky doesn't turn URLs in the text into links: a facet marks the
-    # link, by its UTF-8 byte offsets, not character offsets.
-    def link_facets(text)
-      start = text.byteindex(LISTEN_URL)
-      return [] unless start
-
-      [{ index: { byteStart: start, byteEnd: start + LISTEN_URL.bytesize },
-         features: [{ '$type': 'app.bsky.richtext.facet#link', uri: LISTEN_URL }] }]
-    end
-
     def neils_birthday?(date = Date.today)
       date.month == 11 && date.day == 12
     end
 
     private
 
-    # Splits +text+ into a part of at most +length+ graphemes and the rest.
-    # The cut is at a word boundary where possible, and a cut part ends in
-    # an ellipsis. With no room for any text, the part is empty.
-    def split_to_fit(text, length)
-      return [text, ''] if text.grapheme_clusters.size <= length
-      return ['', text] if length <= ELLIPSIS.length
-
-      cut = text.grapheme_clusters.first(length - ELLIPSIS.length).join
-      word_end = cut.rindex(/\s/)
-      cut = cut[0, word_end] if word_end&.positive?
-      ["#{cut.rstrip}#{ELLIPSIS}", text[cut.length..].lstrip]
-    end
-
-    # Posts in a new thread, to prevent blocking the streaming of data.
+    # Posts in a new thread, to prevent blocking the streaming of data. The
+    # thread's value is whether all posts worked.
     def post(texts)
       return if @disabled
 
       Thread.new do
         session = create_session
-        post_thread(session, texts) if session
+        session ? post_thread(session, texts) : false
       rescue Faraday::Error => e
         RustRadio.logger.error("Bluesky post failed: #{e.message}")
+        false
       end
     end
 
@@ -94,10 +77,8 @@ module RustRadio
     # failed post stops the rest, which would otherwise reply to nothing.
     def post_thread(session, texts)
       root = parent = nil
-      texts.each do |text|
+      texts.all? do |text|
         parent = create_post(session, text, reply: root && { root:, parent: })
-        break unless parent
-
         root ||= parent
       end
     end
@@ -124,7 +105,7 @@ module RustRadio
     end
 
     def record(text, reply)
-      { '$type': 'app.bsky.feed.post', text:, facets: link_facets(text), reply:, langs: ['en'],
+      { '$type': 'app.bsky.feed.post', text:, facets: BlueskyText.link_facets(text), reply:, langs: ['en'],
         createdAt: Time.now.utc.iso8601(3) }.compact
     end
 
